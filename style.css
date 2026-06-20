@@ -106,6 +106,14 @@ body {
     padding: 20px 16px 24px;
 }
 
+@media (min-width: 640px) {
+    .container {
+        max-width: 920px;
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+}
+
 .view.hidden {
     display: none;
 }
@@ -298,6 +306,35 @@ button:active:not(:disabled) {
     animation: fadeIn 0.35s ease-out;
 }
 
+.result-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.result-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.result-grid > * {
+    margin-top: 0;
+}
+
+@media (min-width: 640px) {
+    .result-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        align-items: start;
+    }
+
+    .result-span-full {
+        grid-column: 1 / -1;
+    }
+}
+
 .loading-text {
     font-size: 22px;
     font-weight: 800;
@@ -368,7 +405,6 @@ button:active:not(:disabled) {
 }
 
 .character-panel {
-    margin-top: 20px;
     padding: 18px;
     border-radius: var(--radius);
     background: var(--surface);
@@ -402,7 +438,6 @@ button:active:not(:disabled) {
 }
 
 .original-section {
-    margin-top: 20px;
     padding: 18px;
     border-radius: var(--radius);
     background: var(--surface);
@@ -433,6 +468,14 @@ mark.highlight {
     display: flex;
     flex-direction: column;
     gap: 12px;
+}
+
+@media (min-width: 640px) {
+    .signs-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
 }
 
 .sign-card {
@@ -506,6 +549,14 @@ mark.highlight {
     gap: 10px;
 }
 
+@media (min-width: 480px) {
+    .crisis-buttons {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+}
+
 .crisis-btn {
     width: 100%;
     margin: 0;
@@ -572,7 +623,6 @@ mark.highlight {
 }
 
 .share-section {
-    margin-top: 20px;
     padding: 18px;
     border-radius: var(--radius);
     background: var(--surface);

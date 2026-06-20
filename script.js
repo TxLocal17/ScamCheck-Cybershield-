@@ -218,7 +218,7 @@ function renderFullResult(data, options = {}) {
     let highlightedHtml = "";
     if (signs.length > 0 && message) {
         highlightedHtml = `
-            <div class="original-section">
+            <div class="original-section result-span-full">
                 ${buildSectionHeading("📄", "Tin gốc (đoạn đáng ngờ được tô vàng)")}
                 <div class="original-message">${highlightPhrasesInText(message, signs.map((s) => s.phrase))}</div>
             </div>
@@ -235,7 +235,7 @@ function renderFullResult(data, options = {}) {
             </article>
         `).join("");
         signsHtml = `
-            <div class="signs-section character-panel character-detective">
+            <div class="signs-section character-panel character-detective result-span-full">
                 ${buildSectionHeading("🔍", "Phân tích kỹ thuật (Thám tử)")}
                 <div class="signs-list">${signCards}</div>
             </div>
@@ -298,16 +298,20 @@ function renderFullResult(data, options = {}) {
     }
 
     target.innerHTML = `
-        <div class="risk-card ${risk.className}">
-            <p class="risk-label">${risk.label}</p>
-            <p class="risk-summary">${escapeHtml(detective.summary || risk.hint)}</p>
+        <div class="result-layout">
+            <div class="risk-card ${risk.className}">
+                <p class="risk-label">${risk.label}</p>
+                <p class="risk-summary">${escapeHtml(detective.summary || risk.hint)}</p>
+            </div>
+            <div class="result-grid">
+                ${highlightedHtml}
+                ${signsHtml}
+                ${psychHtml}
+                ${actionsHtml}
+                ${shareHtml}
+                ${crisisHtml}
+            </div>
         </div>
-        ${highlightedHtml}
-        ${signsHtml}
-        ${psychHtml}
-        ${actionsHtml}
-        ${shareHtml}
-        ${crisisHtml}
     `;
 
     if (!options.readOnly) {
@@ -322,7 +326,7 @@ function buildCrisisQuestionHtml() {
     ).join("");
 
     return `
-        <div class="character-panel character-crisis" id="crisisSection">
+        <div class="character-panel character-crisis result-span-full" id="crisisSection">
             ${buildSectionHeading("❓", "Bác đã làm gì rồi?")}
             <div class="crisis-buttons">${buttons}</div>
             <div id="crisisResult" class="crisis-result hidden"></div>
