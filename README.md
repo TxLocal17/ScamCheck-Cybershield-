@@ -29,7 +29,7 @@ Công cụ web giúp kiểm tra nhanh tin nhắn nghi ngờ lừa đảo (SMS, Z
 Settings → Secrets → Actions → `GEMINI_API_KEY` = key mentor cấp
 
 ### Bước 2 — Đổi nguồn Pages
-Settings → Pages → Branch **`gh-pages`**, folder **`/ (root)`**
+Settings → Pages → Source: **GitHub Actions** (không chọn branch thủ công)
 
 ### Bước 3 — Push code
 Mỗi lần push `main`, workflow tự deploy lên `gh-pages`.
