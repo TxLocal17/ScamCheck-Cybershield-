@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScamCheck</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="top-nav" aria-label="Điều hướng chính">
+        <a href="#/" class="nav-link" data-route="/">Kiểm tra</a>
+        <a href="#/history" class="nav-link" data-route="/history">Lịch sử</a>
+        <a href="#/library" class="nav-link" data-route="/library">Thư viện</a>
+    </nav>
+
+    <main class="container">
+        <!-- Trang kiểm tra -->
+        <section id="viewHome" class="view">
+            <h1>ScamCheck</h1>
+            <p class="subtitle">Dán tin nhắn nghi ngờ lừa đảo vào ô bên dưới.</p>
+
+            <div class="sample-buttons" role="group" aria-label="Tin mẫu">
+                <button type="button" class="sample-btn" data-sample="bank">Tin giả ngân hàng</button>
+                <button type="button" class="sample-btn" data-sample="police">Tin giả công an</button>
+                <button type="button" class="sample-btn" data-sample="prize">Tin trúng thưởng</button>
+            </div>
+
+            <textarea
+                id="messageInput"
+                maxlength="5000"
+                placeholder="Ví dụ: Tài khoản của quý khách sẽ bị khóa. Bấm vào link để xác nhận..."
+            ></textarea>
+            <p id="charCount" class="char-count">0 / 5000 ký tự</p>
+
+            <button id="checkButton" type="button">Kiểm tra</button>
+
+            <section id="resultBox" class="result-box" aria-live="polite">
+                <p class="result-placeholder">Kết quả sẽ hiển thị ở đây.</p>
+            </section>
+        </section>
+
+        <!-- Trang lịch sử -->
+        <section id="viewHistory" class="view hidden">
+            <h1>Lịch sử kiểm tra</h1>
+            <p class="subtitle">10 tin gần nhất. Bấm để xem lại, không tốn lượt AI.</p>
+            <div id="historyList" class="history-list"></div>
+            <div id="historyDetail" class="history-detail hidden"></div>
+        </section>
+
+        <!-- Trang thư viện -->
+        <section id="viewLibrary" class="view hidden">
+            <h1>Thư viện kiểu lừa đảo</h1>
+            <p class="subtitle">Tìm hiểu các chiêu thức phổ biến để nhận ra sớm hơn.</p>
+            <div class="filter-bar" role="group" aria-label="Lọc theo nhóm">
+                <button type="button" class="filter-btn active" data-filter="all">Tất cả</button>
+                <button type="button" class="filter-btn" data-filter="giả ngân hàng">Ngân hàng</button>
+                <button type="button" class="filter-btn" data-filter="giả cơ quan công an">Công an</button>
+                <button type="button" class="filter-btn" data-filter="trúng thưởng">Trúng thưởng</button>
+                <button type="button" class="filter-btn" data-filter="giả đơn vị giao hàng">Giao hàng</button>
+            </div>
+            <div id="libraryList" class="library-list"></div>
+            <article id="libraryDetail" class="library-detail hidden"></article>
+            <a href="#/" class="back-link">← Quay lại kiểm tra tin</a>
+        </section>
+    </main>
+
+    <footer>
+        ScamCheck là công cụ giáo dục do nhóm học viên phát triển. Kết quả không thay thế cảnh báo chính thức từ ngân hàng hoặc cơ quan chức năng.
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="config.js" onerror="void 0"></script>
+    <script src="gemini-config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

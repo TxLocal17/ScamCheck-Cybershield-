@@ -1,0 +1,21 @@
+{
+  "_note": "Nhóm cần xác minh lại tất cả số với mentor trước ngày trình diễn.",
+  "banks": [
+    { "name": "Vietcombank", "phone": "1900545413" },
+    { "name": "BIDV", "phone": "19009247" },
+    { "name": "VietinBank", "phone": "1900558868" },
+    { "name": "Agribank", "phone": "1900558818" },
+    { "name": "Techcombank", "phone": "1800588822" },
+    { "name": "MB Bank", "phone": "1900545426" },
+    { "name": "ACB", "phone": "1900545486" },
+    { "name": "VPBank", "phone": "1900545415" },
+    { "name": "Sacombank", "phone": "1900555588" },
+    { "name": "HDBank", "phone": "19006060" },
+    { "name": "TPBank", "phone": "1900585885" },
+    { "name": "SHB", "phone": "1800545426" }
+  ],
+  "authorities": [
+    { "name": "Công an (khẩn cấp)", "phone": "113" },
+    { "name": "Cục An toàn thông tin (Bộ TT&TT)", "phone": "02432096999" }
+  ]
+}

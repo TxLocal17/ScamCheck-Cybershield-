@@ -1,0 +1,838 @@
+const GEMINI_MODEL = "gemini-2.5-flash";
+const MAX_MESSAGE_LENGTH = 5000;
+const HISTORY_KEY = "scamcheck_history";
+const HISTORY_LIMIT = 10;
+const SITE_URL = "https://txlocal17.github.io/ScamCheck-Cybershield-/";
+
+const RISK_CONFIG = {
+    "An toàn": { className: "risk-safe", label: "AN TOÀN", hint: "Tin này có vẻ ổn, nhưng vẫn nên cẩn thận." },
+    "Nghi ngờ": { className: "risk-warning", label: "NGHI NGỜ", hint: "Có dấu hiệu đáng ngờ. Hãy dừng lại và kiểm tra kỹ." },
+    "Nguy hiểm": { className: "risk-danger", label: "NGUY HIỂM", hint: "Rất có thể là lừa đảo. Không bấm link, không chuyển tiền." }
+};
+
+const SAMPLE_MESSAGES = {
+    bank: "THÔNG BÁO KHẨN: Tài khoản Vietcombank của quý khách sẽ bị khóa trong 2 giờ do phát hiện giao dịch bất thường. Vui lòng bấm ngay link xác minh: bit.ly/vcb-khoa-tk. Nếu không xác nhận, ngân hàng không chịu trách nhiệm.",
+    police: "Cục Cảnh sát điều tra: Quý vị đang bị liên quan đến vụ án rửa tiền xuyên quốc gia. Gọi ngay số 0901234567 trong 30 phút để làm việc. Nếu không hợp tác sẽ phát lệnh bắt và phong tỏa tài khoản.",
+    prize: "Chúc mừng! Bạn trúng iPhone 16 Pro trong chương trình tri ân khách hàng 2026. Nhận thưởng tại trungthuong-2026.com. Đóng phí vận chuyển 500.000đ trong 24 giờ để nhận quà."
+};
+
+const CRISIS_CHOICES = [
+    { id: "nothing", label: "Chưa làm gì" },
+    { id: "clicked", label: "Đã bấm vào đường dẫn" },
+    { id: "transferred", label: "Đã chuyển khoản" },
+    { id: "otp", label: "Đã cung cấp mã xác thực" }
+];
+
+let hotlinesData = null;
+let scamTypesData = [];
+let currentMessage = "";
+let lastFullResult = null;
+let libraryFilter = "all";
+
+const messageInput = document.getElementById("messageInput");
+const checkButton = document.getElementById("checkButton");
+const resultBox = document.getElementById("resultBox");
+const charCount = document.getElementById("charCount");
+const viewHome = document.getElementById("viewHome");
+const viewHistory = document.getElementById("viewHistory");
+const viewLibrary = document.getElementById("viewLibrary");
+const historyList = document.getElementById("historyList");
+const historyDetail = document.getElementById("historyDetail");
+const libraryList = document.getElementById("libraryList");
+const libraryDetail = document.getElementById("libraryDetail");
+
+init();
+
+function init() {
+    bindHomeEvents();
+    bindRouter();
+    loadStaticData();
+    navigateTo(getRouteFromHash());
+}
+
+function bindHomeEvents() {
+    checkButton.addEventListener("click", runCheck);
+    messageInput.addEventListener("input", updateCharCount);
+    updateCharCount();
+
+    document.querySelectorAll(".sample-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const key = btn.dataset.sample;
+            if (SAMPLE_MESSAGES[key]) {
+                messageInput.value = SAMPLE_MESSAGES[key];
+                updateCharCount();
+                messageInput.focus();
+            }
+        });
+    });
+
+    document.querySelectorAll(".filter-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            libraryFilter = btn.dataset.filter;
+            renderLibraryList();
+        });
+    });
+}
+
+function bindRouter() {
+    window.addEventListener("hashchange", () => navigateTo(getRouteFromHash()));
+    document.querySelectorAll(".nav-link").forEach((link) => {
+        link.addEventListener("click", () => {
+            document.querySelectorAll(".nav-link").forEach((l) => l.classList.remove("active"));
+            link.classList.add("active");
+        });
+    });
+}
+
+function getRouteFromHash() {
+    const hash = window.location.hash.replace("#", "") || "/";
+    if (hash.startsWith("/history")) return "/history";
+    if (hash.startsWith("/library")) return "/library";
+    return "/";
+}
+
+function navigateTo(route) {
+    viewHome.classList.toggle("hidden", route !== "/");
+    viewHistory.classList.toggle("hidden", route !== "/history");
+    viewLibrary.classList.toggle("hidden", route !== "/library");
+
+    document.querySelectorAll(".nav-link").forEach((link) => {
+        link.classList.toggle("active", link.dataset.route === route);
+    });
+
+    if (route === "/history") renderHistoryList();
+    if (route === "/library") renderLibraryList();
+}
+
+async function loadStaticData() {
+    try {
+        const [hotlinesRes, typesRes] = await Promise.all([
+            fetch("data/hotlines.json"),
+            fetch("data/scam-types.json")
+        ]);
+        if (hotlinesRes.ok) hotlinesData = await hotlinesRes.json();
+        if (typesRes.ok) scamTypesData = await typesRes.json();
+    } catch (error) {
+        console.error("Không tải được dữ liệu tĩnh:", error);
+    }
+}
+
+function updateCharCount() {
+    const len = messageInput.value.length;
+    charCount.textContent = `${len} / ${MAX_MESSAGE_LENGTH} ký tự`;
+    charCount.classList.toggle("char-count-warn", len > MAX_MESSAGE_LENGTH * 0.9);
+}
+
+async function runCheck() {
+    const message = messageInput.value.trim();
+
+    if (!message) {
+        showError("Vui lòng nhập tin nhắn.");
+        return;
+    }
+
+    if (message.length > MAX_MESSAGE_LENGTH) {
+        showError(`Tin nhắn quá dài. Vui lòng rút gọn dưới ${MAX_MESSAGE_LENGTH} ký tự.`);
+        return;
+    }
+
+    currentMessage = message;
+    checkButton.disabled = true;
+    showLoading("Đang phân tích tin nhắn...");
+    lastFullResult = null;
+
+    try {
+        const detectiveRaw = await callGemini(buildDetectivePrompt(message));
+        const detective = parseDetectiveResult(detectiveRaw);
+
+        let psychologist = null;
+        let psychologistError = null;
+
+        if (shouldCallPsychologist(detective.riskLevel)) {
+            showLoading("Thám tử xong. Cô tâm lý đang giải thích...");
+            try {
+                const psychRaw = await callGemini(buildPsychologistPrompt(message, detective));
+                psychologist = parsePsychologistResult(psychRaw);
+            } catch (error) {
+                psychologistError = getUserErrorMessage(error);
+            }
+        }
+
+        lastFullResult = { detective, psychologist, psychologistError, message };
+        saveToHistory(lastFullResult);
+        renderFullResult(lastFullResult);
+    } catch (error) {
+        showError(getUserErrorMessage(error));
+        console.error(error);
+    } finally {
+        checkButton.disabled = false;
+    }
+}
+
+function shouldCallPsychologist(riskLevel) {
+    return riskLevel === "Nghi ngờ" || riskLevel === "Nguy hiểm";
+}
+
+function showLoading(text) {
+    resultBox.className = "result-box result-loading";
+    resultBox.innerHTML = `
+        <div class="spinner" aria-hidden="true"></div>
+        <p class="loading-text">${escapeHtml(text)}</p>
+        <p class="loading-subtext">Vui lòng đợi trong giây lát.</p>
+    `;
+}
+
+function showError(message) {
+    resultBox.className = "result-box result-error";
+    resultBox.innerHTML = `<p>${escapeHtml(message)}</p>`;
+}
+
+function renderFullResult(data, options = {}) {
+    const target = options.container || resultBox;
+    const { detective, psychologist, psychologistError, message } = data;
+    const risk = RISK_CONFIG[detective.riskLevel] || RISK_CONFIG["Nghi ngờ"];
+    const signs = Array.isArray(detective.signs) ? detective.signs : [];
+
+    let highlightedHtml = "";
+    if (signs.length > 0 && message) {
+        highlightedHtml = `
+            <div class="original-section">
+                <h2 class="section-title">Tin gốc (đoạn đáng ngờ được tô vàng)</h2>
+                <div class="original-message">${highlightPhrasesInText(message, signs.map((s) => s.phrase))}</div>
+            </div>
+        `;
+    }
+
+    let signsHtml = "";
+    if (signs.length > 0) {
+        const signCards = signs.map((sign, index) => `
+            <article class="sign-card">
+                <p class="sign-number">Dấu hiệu ${index + 1}</p>
+                <p class="sign-phrase">"${escapeHtml(sign.phrase || "")}"</p>
+                <p class="sign-reason">${escapeHtml(sign.reason || "")}</p>
+            </article>
+        `).join("");
+        signsHtml = `
+            <div class="signs-section detective-section">
+                <h2 class="section-title">Phân tích kỹ thuật (Thám tử)</h2>
+                <div class="signs-list">${signCards}</div>
+            </div>
+        `;
+    } else if (detective.riskLevel === "An toàn") {
+        signsHtml = `
+            <div class="detective-section">
+                <h2 class="section-title">Phân tích kỹ thuật (Thám tử)</h2>
+                <p class="safe-note">Không thấy câu nào đặc biệt đáng ngờ trong tin này.</p>
+            </div>
+        `;
+    } else {
+        signsHtml = `
+            <div class="detective-section">
+                <h2 class="section-title">Phân tích kỹ thuật (Thám tử)</h2>
+            </div>
+        `;
+    }
+
+    let psychHtml = "";
+    if (psychologist?.explanation) {
+        psychHtml = `
+            <div class="psychologist-section">
+                <h2 class="section-title">Hiểu vì sao mình suýt tin (Cô tâm lý)</h2>
+                <p class="psychologist-text">${escapeHtml(psychologist.explanation)}</p>
+            </div>
+        `;
+    } else if (psychologistError) {
+        psychHtml = `
+            <div class="psychologist-section psychologist-error">
+                <h2 class="section-title">Hiểu vì sao mình suýt tin (Cô tâm lý)</h2>
+                <p class="psychologist-text">Cô tâm lý đang bận, vui lòng thử lại sau.</p>
+            </div>
+        `;
+    }
+
+    const actions = Array.isArray(detective.actions) ? detective.actions.slice(0, 3) : [];
+    let actionsHtml = "";
+    if (actions.length > 0) {
+        actionsHtml = `
+            <div class="actions-section">
+                <h2 class="section-title">Nên làm gì tiếp theo</h2>
+                <ul class="actions-list">${actions.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
+            </div>
+        `;
+    }
+
+    const shareHtml = options.readOnly ? "" : `
+        <div class="share-section">
+            <button type="button" id="shareCardBtn" class="secondary-btn">Tạo thẻ cảnh báo chia sẻ</button>
+            <div id="shareCardPreview" class="share-preview hidden"></div>
+        </div>
+    `;
+
+    const crisisHtml = options.readOnly ? "" : buildCrisisQuestionHtml();
+
+    if (!options.container) {
+        resultBox.className = "result-box";
+    }
+
+    target.innerHTML = `
+        <div class="risk-card ${risk.className}">
+            <p class="risk-label">${risk.label}</p>
+            <p class="risk-summary">${escapeHtml(detective.summary || risk.hint)}</p>
+        </div>
+        ${highlightedHtml}
+        ${signsHtml}
+        ${psychHtml}
+        ${actionsHtml}
+        ${shareHtml}
+        ${crisisHtml}
+    `;
+
+    if (!options.readOnly) {
+        target.querySelector("#shareCardBtn")?.addEventListener("click", () => generateShareCard(data));
+        bindCrisisButtons(data, target);
+    }
+}
+
+function buildCrisisQuestionHtml() {
+    const buttons = CRISIS_CHOICES.map((c) =>
+        `<button type="button" class="crisis-btn" data-crisis="${c.id}">${escapeHtml(c.label)}</button>`
+    ).join("");
+
+    return `
+        <div class="crisis-section" id="crisisSection">
+            <h2 class="section-title">Bác đã làm gì rồi?</h2>
+            <div class="crisis-buttons">${buttons}</div>
+            <div id="crisisResult" class="crisis-result hidden"></div>
+        </div>
+    `;
+}
+
+function bindCrisisButtons(data, root = resultBox) {
+    const section = root.querySelector("#crisisSection");
+    if (!section) return;
+
+    section.querySelectorAll(".crisis-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+            if (section.dataset.answered === "true") return;
+            section.dataset.answered = "true";
+            section.querySelectorAll(".crisis-btn").forEach((b) => {
+                b.disabled = true;
+                b.classList.toggle("selected", b === btn);
+            });
+
+            const choice = btn.dataset.crisis;
+            const resultEl = root.querySelector("#crisisResult");
+            resultEl.classList.remove("hidden");
+
+            if (choice === "nothing") {
+                resultEl.innerHTML = `<p class="praise-text">Bác làm đúng rồi! Cứ giữ bình tĩnh, không bấm link và không chuyển tiền theo tin lạ nhé.</p>`;
+                return;
+            }
+
+            resultEl.innerHTML = `<p class="loading-text">Người ứng cứu đang soạn hướng dẫn...</p>`;
+
+            try {
+                const hotlines = await ensureHotlines();
+                const raw = await callGemini(buildRescuerPrompt(data.message, data.detective, choice, hotlines));
+                const steps = parseRescuerResult(raw);
+                resultEl.innerHTML = renderRescuerSteps(steps);
+            } catch (error) {
+                resultEl.innerHTML = `<p class="result-error-inline">${escapeHtml(getUserErrorMessage(error))}</p>`;
+            }
+        });
+    });
+}
+
+function renderRescuerSteps(steps) {
+    if (!steps.length) {
+        return `<p>Gọi tổng đài ngân hàng in trên thẻ ngay và báo công an số 113 nếu đã chuyển tiền hoặc lộ mã OTP.</p>`;
+    }
+
+    const items = steps.map((step, i) => `
+        <li class="rescuer-step">
+            <strong>Bước ${i + 1}: ${escapeHtml(step.action || "")}</strong>
+            ${step.phone ? `<p class="rescuer-phone">Gọi: ${escapeHtml(step.phone)}</p>` : ""}
+            ${step.script ? `<p class="rescuer-script">"${escapeHtml(step.script)}"</p>` : ""}
+        </li>
+    `).join("");
+
+    return `
+        <div class="rescuer-section">
+            <h3 class="rescuer-title">Hướng dẫn ứng cứu (Người ứng cứu)</h3>
+            <ol class="rescuer-list">${items}</ol>
+        </div>
+    `;
+}
+
+async function ensureHotlines() {
+    if (hotlinesData) return hotlinesData;
+    const res = await fetch("data/hotlines.json");
+    if (!res.ok) throw new Error("Loi mang");
+    hotlinesData = await res.json();
+    return hotlinesData;
+}
+
+async function generateShareCard(data) {
+    const preview = document.getElementById("shareCardPreview");
+    preview.classList.remove("hidden");
+    preview.innerHTML = `<p class="loading-text">Đang tạo thẻ...</p>`;
+
+    try {
+        if (typeof QRCode === "undefined") {
+            throw new Error("Không tải được thư viện QR");
+        }
+
+        const canvas = document.createElement("canvas");
+    canvas.width = 600;
+    canvas.height = 800;
+    const ctx = canvas.getContext("2d");
+    const risk = data.detective.riskLevel;
+    const colors = {
+        "An toàn": "#2e7d32",
+        "Nghi ngờ": "#f9a825",
+        "Nguy hiểm": "#d93025"
+    };
+    const bg = colors[risk] || "#f9a825";
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, 600, 800);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 600, 120);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 36px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(risk.toUpperCase(), 300, 55);
+    ctx.font = "20px Arial";
+    ctx.fillText("ScamCheck", 300, 95);
+
+    ctx.fillStyle = "#111";
+    ctx.textAlign = "left";
+    ctx.font = "22px Arial";
+    wrapCanvasText(ctx, data.detective.summary || "", 30, 160, 540, 30);
+
+    ctx.font = "bold 20px Arial";
+    ctx.fillText("Dấu hiệu chính:", 30, 280);
+    ctx.font = "18px Arial";
+    let y = 315;
+    (data.detective.signs || []).slice(0, 3).forEach((sign) => {
+        wrapCanvasText(ctx, `• ${sign.phrase}`, 30, y, 540, 26);
+        y += 55;
+    });
+
+    const qrCanvas = document.createElement("canvas");
+    await QRCode.toCanvas(qrCanvas, SITE_URL, { width: 140, margin: 1 });
+    ctx.drawImage(qrCanvas, 230, 620, 140, 140);
+    ctx.font = "16px Arial";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#555";
+    ctx.fillText("Quét mã để dùng ScamCheck", 300, 780);
+
+    const dataUrl = canvas.toDataURL("image/png");
+    preview.innerHTML = `
+        <img src="${dataUrl}" alt="Thẻ cảnh báo ScamCheck" class="share-image">
+        <a href="${dataUrl}" download="scamcheck-canh-bao.png" class="secondary-btn download-btn">Tải ảnh về máy</a>
+    `;
+    } catch (error) {
+        preview.innerHTML = `<p class="result-error-inline">Không tạo được thẻ. Vui lòng thử lại sau.</p>`;
+        console.error(error);
+    }
+}
+
+function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(" ");
+    let line = "";
+    for (const word of words) {
+        const test = line + word + " ";
+        if (ctx.measureText(test).width > maxWidth && line) {
+            ctx.fillText(line.trim(), x, y);
+            line = word + " ";
+            y += lineHeight;
+        } else {
+            line = test;
+        }
+    }
+    if (line) ctx.fillText(line.trim(), x, y);
+}
+
+function highlightPhrasesInText(text, phrases) {
+    const validPhrases = [...new Set(phrases.filter(Boolean))];
+    if (!validPhrases.length) return escapeHtml(text);
+
+    const ranges = [];
+    for (const phrase of validPhrases) {
+        let start = 0;
+        while (start < text.length) {
+            const idx = text.indexOf(phrase, start);
+            if (idx === -1) break;
+            ranges.push({ start: idx, end: idx + phrase.length });
+            start = idx + phrase.length;
+        }
+    }
+
+    if (!ranges.length) return escapeHtml(text);
+
+    ranges.sort((a, b) => a.start - b.start);
+    const merged = [];
+    for (const r of ranges) {
+        const last = merged[merged.length - 1];
+        if (last && r.start <= last.end) {
+            last.end = Math.max(last.end, r.end);
+        } else {
+            merged.push({ ...r });
+        }
+    }
+
+    let html = "";
+    let cursor = 0;
+    for (const r of merged) {
+        html += escapeHtml(text.slice(cursor, r.start));
+        html += `<mark class="highlight">${escapeHtml(text.slice(r.start, r.end))}</mark>`;
+        cursor = r.end;
+    }
+    html += escapeHtml(text.slice(cursor));
+    return html;
+}
+
+function saveToHistory(data) {
+    const items = getHistory();
+    const entry = {
+        id: Date.now(),
+        message: data.message,
+        detective: data.detective,
+        psychologist: data.psychologist,
+        psychologistError: data.psychologistError,
+        savedAt: new Date().toISOString()
+    };
+    items.unshift(entry);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(items.slice(0, HISTORY_LIMIT)));
+}
+
+function getHistory() {
+    try {
+        const raw = localStorage.getItem(HISTORY_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch {
+        return [];
+    }
+}
+
+function renderHistoryList() {
+    const items = getHistory();
+    historyDetail.classList.add("hidden");
+
+    if (!items.length) {
+        historyList.innerHTML = `<p class="empty-state">Chưa có tin nào được kiểm tra.</p>`;
+        return;
+    }
+
+    historyList.innerHTML = items.map((item) => {
+        const risk = RISK_CONFIG[item.detective?.riskLevel] || RISK_CONFIG["Nghi ngờ"];
+        const preview = item.message.slice(0, 60) + (item.message.length > 60 ? "..." : "");
+        const date = new Date(item.savedAt).toLocaleString("vi-VN");
+        return `
+            <button type="button" class="history-item" data-id="${item.id}">
+                <span class="history-risk ${risk.className}">${risk.label}</span>
+                <span class="history-preview">${escapeHtml(preview)}</span>
+                <span class="history-date">${escapeHtml(date)}</span>
+            </button>
+        `;
+    }).join("");
+
+    historyList.querySelectorAll(".history-item").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const item = items.find((i) => i.id === Number(btn.dataset.id));
+            if (!item) return;
+            historyDetail.classList.remove("hidden");
+            historyDetail.innerHTML = `<button type="button" class="back-detail-btn">← Quay lại danh sách</button><div id="historyResultHost" class="result-box"></div>`;
+            historyDetail.querySelector(".back-detail-btn").addEventListener("click", () => {
+                historyDetail.classList.add("hidden");
+            });
+            const host = historyDetail.querySelector("#historyResultHost");
+            renderFullResult({
+                message: item.message,
+                detective: item.detective,
+                psychologist: item.psychologist,
+                psychologistError: item.psychologistError
+            }, { readOnly: true, container: host });
+        });
+    });
+}
+
+function renderLibraryList() {
+    if (!scamTypesData.length) {
+        libraryList.innerHTML = `<p class="empty-state">Đang tải thư viện...</p>`;
+        return;
+    }
+
+    libraryDetail.classList.add("hidden");
+    const filtered = libraryFilter === "all"
+        ? scamTypesData
+        : scamTypesData.filter((t) => t.category === libraryFilter);
+
+    libraryList.innerHTML = filtered.map((item) => `
+        <button type="button" class="library-item" data-id="${escapeHtml(item.id)}">
+            <span class="library-category">${escapeHtml(item.category)}</span>
+            <span class="library-name">${escapeHtml(item.name)}</span>
+        </button>
+    `).join("");
+
+    libraryList.querySelectorAll(".library-item").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const item = scamTypesData.find((t) => t.id === btn.dataset.id);
+            if (!item) return;
+            libraryDetail.classList.remove("hidden");
+            libraryDetail.innerHTML = `
+                <h2>${escapeHtml(item.name)}</h2>
+                <p class="library-cat-label">${escapeHtml(item.category)}</p>
+                <p>${escapeHtml(item.description)}</p>
+                <div class="library-example">
+                    <strong>Ví dụ tin nhắn:</strong>
+                    <p>${escapeHtml(item.example)}</p>
+                </div>
+                <button type="button" class="secondary-btn" id="tryInCheckBtn">Thử kiểm tra tin này</button>
+            `;
+            document.getElementById("tryInCheckBtn").addEventListener("click", () => {
+                messageInput.value = item.example;
+                updateCharCount();
+                window.location.hash = "#/";
+                navigateTo("/");
+            });
+        });
+    });
+}
+
+function parseDetectiveResult(rawText) {
+    const fallback = {
+        riskLevel: "Nghi ngờ",
+        summary: "Không đọc được kết quả chi tiết. Hãy thử lại hoặc hỏi người thân.",
+        signs: [],
+        actions: [
+            "Không bấm link trong tin lạ",
+            "Gọi tổng đài ngân hàng in trên thẻ để xác nhận",
+            "Hỏi con cháu hoặc hàng xóm tin cậy"
+        ]
+    };
+
+    try {
+        const parsed = JSON.parse(cleanJsonText(rawText));
+        const riskLevel = normalizeRiskLevel(parsed.riskLevel);
+        return {
+            riskLevel,
+            summary: String(parsed.summary || RISK_CONFIG[riskLevel].hint),
+            signs: (parsed.signs || [])
+                .filter((s) => s && (s.phrase || s.reason))
+                .map((s) => ({
+                    phrase: String(s.phrase || "").trim(),
+                    reason: String(s.reason || "").trim()
+                })),
+            actions: (parsed.actions || []).map((a) => String(a).trim())
+        };
+    } catch (error) {
+        console.error("Parse detective error:", error, rawText);
+        return fallback;
+    }
+}
+
+function parsePsychologistResult(rawText) {
+    const fallback = {
+        explanation: "Tin này thường nhắm vào cảm xúc gấp gáp. Bác cứ dừng lại, hít thở sâu và hỏi người thân trước khi làm gì nhé."
+    };
+
+    try {
+        const parsed = JSON.parse(cleanJsonText(rawText));
+        return { explanation: String(parsed.explanation || fallback.explanation).trim() };
+    } catch (error) {
+        console.error("Parse psychologist error:", error);
+        return fallback;
+    }
+}
+
+function parseRescuerResult(rawText) {
+    try {
+        const parsed = JSON.parse(cleanJsonText(rawText));
+        return (parsed.steps || []).map((s) => ({
+            action: String(s.action || "").trim(),
+            phone: String(s.phone || "").trim(),
+            script: String(s.script || "").trim()
+        }));
+    } catch (error) {
+        console.error("Parse rescuer error:", error);
+        return [];
+    }
+}
+
+function cleanJsonText(rawText) {
+    return String(rawText)
+        .replace(/```json\s*/gi, "")
+        .replace(/```\s*/g, "")
+        .trim();
+}
+
+function normalizeRiskLevel(level) {
+    const value = String(level || "").toLowerCase();
+    if (value.includes("an toàn") || value.includes("an toan")) return "An toàn";
+    if (value.includes("nguy hiểm") || value.includes("nguy hiem")) return "Nguy hiểm";
+    return "Nghi ngờ";
+}
+
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+function getApiKey() {
+    if (typeof GEMINI_API_KEY !== "undefined" && GEMINI_API_KEY && GEMINI_API_KEY !== "YOUR_GEMINI_API_KEY_HERE") {
+        return GEMINI_API_KEY;
+    }
+    return "";
+}
+
+async function callGemini(promptText) {
+    if (window.location.protocol === "file:") {
+        throw new Error("Bi chan CORS");
+    }
+
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error("Thiếu cấu hình API");
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+    let response;
+    try {
+        response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "x-goog-api-key": apiKey
+            },
+            signal: controller.signal,
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: promptText }] }],
+                generationConfig: { responseMimeType: "application/json" }
+            })
+        });
+    } catch (error) {
+        if (error.name === "AbortError") throw new Error("Het thoi gian cho");
+        throw new Error("Loi mang");
+    } finally {
+        clearTimeout(timeoutId);
+    }
+
+    const data = await response.json();
+    if (!response.ok) {
+        console.error(data);
+        throw new Error(getApiErrorMessage(response.status, data));
+    }
+
+    const blockedReason = data.candidates?.[0]?.finishReason;
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!text) {
+        if (blockedReason === "SAFETY" || data.promptFeedback?.blockReason) {
+            throw new Error("Bi loc noi dung");
+        }
+        throw new Error("Khong co ket qua");
+    }
+
+    return text;
+}
+
+function buildDetectivePrompt(message) {
+    return `Bạn là Thám tử phân tích tin nhắn lừa đảo. Giọng khô khan, lý tính. Phân tích tin sau và trả về ĐÚNG định dạng JSON, không thêm chữ nào khác:
+
+"${message}"
+
+JSON bắt buộc:
+{
+  "riskLevel": "An toàn" hoặc "Nghi ngờ" hoặc "Nguy hiểm",
+  "summary": "một câu tóm tắt dễ hiểu cho người lớn tuổi",
+  "signs": [{"phrase": "đoạn nguyên văn trích từ tin gốc", "reason": "giải thích ngắn"}],
+  "actions": ["việc 1", "việc 2", "việc 3"]
+}
+
+Quy tắc:
+- riskLevel chỉ được là một trong ba giá trị trên
+- signs: tối đa 5, phrase phải trích nguyên văn từ tin gốc
+- Nếu An toàn thì signs = []
+- actions: đúng 3 việc cụ thể
+- Tiếng Việt`;
+}
+
+function buildPsychologistPrompt(message, detective) {
+    return `Bạn là Cô tâm lý. Giọng gần gũi, xưng "cô", gọi người dùng là "bác". Không hù doạ, không dạy dỗ.
+
+Tin nhắn: "${message}"
+Mức rủi ro Thám tử kết luận: ${detective.riskLevel}
+
+Trả về ĐÚNG JSON:
+{"explanation": "từ 2 đến 3 câu giải thích chiêu thức tâm lý kẻ lừa đảo dùng"}
+
+Chỉ 2-3 câu, tiếng Việt, thân thiện.`;
+}
+
+function buildRescuerPrompt(message, detective, choice, hotlines) {
+    const hotlineText = formatHotlinesForPrompt(hotlines);
+    const scenarioMap = {
+        clicked: "Người dùng ĐÃ BẤM vào đường dẫn lạ trong tin nhắn.",
+        transferred: "Người dùng ĐÃ CHUYỂN KHOẢN theo yêu cầu trong tin nhắn.",
+        otp: "Người dùng ĐÃ CUNG CẤP mã xác thực OTP cho kẻ lừa đảo."
+    };
+
+    return `Bạn là Người ứng cứu. Giọng bình tĩnh, dứt khoát. Không an ủi, không phân tích dài. Chỉ đưa bước hành động cụ thể.
+
+Tình huống: ${scenarioMap[choice] || ""}
+Tin nhắn: "${message}"
+Mức rủi ro: ${detective.riskLevel}
+
+DANH SÁCH SỐ ĐIỆN THOẠI CHÍNH THỐNG (CHỈ được dùng số trong danh sách này, KHÔNG tự bịa số):
+${hotlineText}
+
+Trả về ĐÚNG JSON:
+{
+  "steps": [
+    {"action": "việc cần làm", "phone": "số từ danh sách hoặc rỗng", "script": "câu nói mẫu khi gọi điện"}
+  ]
+}
+
+Quy tắc:
+- 4 đến 6 bước, đánh số logic
+- phone chỉ lấy từ danh sách trên
+- script ngắn, đọc được khi gọi điện
+- Không câu cảm thán
+- Tiếng Việt`;
+}
+
+function formatHotlinesForPrompt(hotlines) {
+    const lines = [];
+    (hotlines.banks || []).forEach((b) => lines.push(`${b.name}: ${b.phone}`));
+    (hotlines.authorities || []).forEach((a) => lines.push(`${a.name}: ${a.phone}`));
+    return lines.join("\n");
+}
+
+function getApiErrorMessage(status, data) {
+    const apiMessage = String(data?.error?.message || "");
+    if (status === 401 || status === 403) return "Key het han";
+    if (status === 429 || apiMessage.toLowerCase().includes("quota")) return "Het quota";
+    return "Gemini API loi";
+}
+
+function getUserErrorMessage(error) {
+    const messages = {
+        "Thiếu cấu hình API": "Ứng dụng chưa được cấu hình API. Nhóm phát triển cần thiết lập GitHub Secret GEMINI_API_KEY.",
+        "Bi chan CORS": "Vui lòng mở trang bằng Live Server hoặc link GitHub Pages, không mở file HTML trực tiếp.",
+        "Key het han": "API key đã hết hạn hoặc không hợp lệ. Nhóm cần liên hệ mentor để lấy key mới.",
+        "Het quota": "Đã hết lượt gọi AI hôm nay (giới hạn 1000 lượt/ngày). Vui lòng thử lại vào ngày mai.",
+        "Het thoi gian cho": "AI phản hồi quá lâu. Vui lòng thử lại sau.",
+        "Loi mang": "Không có kết nối mạng. Kiểm tra Wi-Fi rồi thử lại.",
+        "Bi loc noi dung": "Không thể phân tích tin này. Hãy thử rút gọn nội dung hoặc hỏi người thân.",
+        "Khong co ket qua": "AI không trả về kết quả. Vui lòng thử lại sau."
+    };
+    return messages[error.message] || "Không thể kết nối tới Gemini. Vui lòng thử lại sau.";
+}

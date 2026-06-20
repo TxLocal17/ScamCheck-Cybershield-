@@ -1,0 +1,107 @@
+[
+  {
+    "id": "bank-1",
+    "name": "Giả thông báo khóa tài khoản",
+    "category": "giả ngân hàng",
+    "description": "Kẻ lừa đảo giả danh ngân hàng, báo tài khoản sắp bị khóa và yêu cầu bấm link xác minh gấp.",
+    "example": "Kính gửi quý khách, tài khoản của bạn sẽ bị khóa trong 2 giờ do phát hiện giao dịch bất thường. Bấm ngay vào link để xác nhận: bit.ly/vcb-xacminh"
+  },
+  {
+    "id": "bank-2",
+    "name": "Giả yêu cầu cập nhật thẻ chip",
+    "category": "giả ngân hàng",
+    "description": "Tin nhắn yêu cầu cập nhật thông tin thẻ hoặc mã OTP để tránh bị khóa thẻ.",
+    "example": "Ngân hàng thông báo: Thẻ ATM của quý khách cần cập nhật sinh trắc học. Vui lòng nhập mã OTP vừa nhận vào link: vietcornbank-verify.com"
+  },
+  {
+    "id": "bank-3",
+    "name": "Giả hoàn tiền giao dịch",
+    "category": "giả ngân hàng",
+    "description": "Thông báo hoàn tiền nhầm hoặc trả thưởng, dụ người dùng bấm link điền thông tin thẻ.",
+    "example": "Chúc mừng! Bạn được hoàn 2.500.000đ do giao dịch trùng lặp. Nhận tiền tại: https://bidv-hoantien.net trong 24h."
+  },
+  {
+    "id": "police-1",
+    "name": "Giả cơ quan điều tra",
+    "category": "giả cơ quan công an",
+    "description": "Giả danh công an, cảnh báo liên quan đến tội phạm rửa tiền hoặc vi phạm pháp luật.",
+    "example": "Cục Cảnh sát điều tra: Quý vị đang bị liên quan vụ án rửa tiền. Gọi ngay 090x xxx xxx để làm việc, nếu không sẽ bị bắt."
+  },
+  {
+    "id": "police-2",
+    "name": "Giả giấy mời làm việc",
+    "category": "giả cơ quan công an",
+    "description": "Gửi file hoặc link giả mạo giấy mời, lệnh triệu tập từ cơ quan chức năng.",
+    "example": "Ban nhận được giấy mời làm việc số 4521 từ Công an TP.HCM. Tải file đính kèm và xác nhận trong hôm nay: drive.google.com/..."
+  },
+  {
+    "id": "police-3",
+    "name": "Giả vi phạm giao thông",
+    "category": "giả cơ quan công an",
+    "description": "Thông báo phạt nguội hoặc vi phạm camera, yêu cầu thanh toán qua link lạ.",
+    "example": "Phạt nguội: Xe của bạn vi phạm tốc độ. Thanh toán 800.000đ tại conganxuphat.vn để tránh bị phong tỏa bằng lái."
+  },
+  {
+    "id": "prize-1",
+    "name": "Trúng thưởng ngẫu nhiên",
+    "category": "trúng thưởng",
+    "description": "Thông báo trúng giải thưởng lớn từ chương trình không từng tham gia.",
+    "example": "Chúc mừng bạn trúng iPhone 16 Pro trong chương trình tri ân khách hàng! Nhận thưởng tại: trungthuong-2026.com, đóng phí vận chuyển 500.000đ."
+  },
+  {
+    "id": "prize-2",
+    "name": "Trúng thưởng từ ngân hàng",
+    "category": "trúng thưởng",
+    "description": "Giả danh ngân hàng thông báo trúng thưởng, yêu cầu chuyển phí nhận thưởng.",
+    "example": "Vietcombank: Quý khách trúng 50 triệu đồng. Vui lòng chuyển 2% phí xử lý (1 triệu) để nhận thưởng trong 30 phút."
+  },
+  {
+    "id": "prize-3",
+    "name": "Trúng thưởng Shopee/Lazada giả",
+    "category": "trúng thưởng",
+    "description": "Giả mạo sàn thương mại điện tử, mời nhận voucher hoặc quà tặng qua link lạ.",
+    "example": "Shopee thông báo: Bạn được tặng 5.000.000đ voucher. Bấm nhận ngay: shopee-khuyenmai.xyz trước khi hết hạn."
+  },
+  {
+    "id": "delivery-1",
+    "name": "Giả đơn hàng chưa thanh toán COD",
+    "category": "giả đơn vị giao hàng",
+    "description": "Thông báo có gói hàng chờ giao, yêu cầu thanh toán phí hoặc cập nhật địa chỉ qua link.",
+    "example": "GHTK: Gói hàng #VN8921 chưa thanh toán phí 45.000đ. Cập nhật tại ghtk-thuhoi.com để nhận hàng trong hôm nay."
+  },
+  {
+    "id": "delivery-2",
+    "name": "Giả giao hàng thất bại",
+    "category": "giả đơn vị giao hàng",
+    "description": "Báo giao hàng không thành công, dụ bấm link đặt lại lịch giao và điền thông tin cá nhân.",
+    "example": "Viettel Post: Đơn hàng giao thất bại 2 lần. Đặt lại lịch giao tại viettelpost-delivery.vn và xác nhận số điện thoại."
+  },
+  {
+    "id": "delivery-3",
+    "name": "Giả thuế nhập khẩu hàng quốc tế",
+    "category": "giả đơn vị giao hàng",
+    "description": "Thông báo hàng quốc tế bị giữ, yêu cầu chuyển tiền thuế hoặc phí hải quan.",
+    "example": "EMS International: Gói hàng từ nước ngoài cần nộp thuế 1.200.000đ. Thanh toán tại ems-customs-fee.com trong 48 giờ."
+  },
+  {
+    "id": "bank-4",
+    "name": "Giả SMS ngân hàng OTP",
+    "category": "giả ngân hàng",
+    "description": "Tin nhắn giả mạo mã OTP hoặc yêu cầu chia sẻ mã xác thực cho nhân viên ngân hàng.",
+    "example": "Techcombank: Mã OTP của bạn là 847291. Không chia sẻ cho ai. Nếu không phải bạn, gọi 090x xxx xxx ngay."
+  },
+  {
+    "id": "police-4",
+    "name": "Giả cưỡng chế nợ thuế",
+    "category": "giả cơ quan công an",
+    "description": "Giả danh cơ quan thuế hoặc thanh tra, đe dọa phong tỏa tài khoản nếu không thanh toán ngay.",
+    "example": "Cục Thuế: Tài khoản của ông/bà nợ thuế 15 triệu. Chuyển khoản trong 2 giờ để tránh khởi tố hình sự."
+  },
+  {
+    "id": "prize-4",
+    "name": "Trúng xổ số online giả",
+    "category": "trúng thưởng",
+    "description": "Thông báo trúng xổ số hoặc quay số may mắn trên mạng, yêu cầu nộp thuế trước khi nhận tiền.",
+    "example": "Xổ số Mega 6/45: Bạn trúng giải đặc biệt 12 tỷ. Nộp 5% thuế (600 triệu) tại mega645-nhanthuong.com."
+  }
+]

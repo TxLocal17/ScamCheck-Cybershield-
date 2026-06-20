@@ -1,0 +1,13 @@
+# API key — không bao giờ đưa lên Git
+config.js
+
+# File chứa secret khác
+keys.txt
+.env
+*.key
+
+# Hệ điều hành
+.DS_Store
+
+# Nhật ký nháp
+nhat-ky/ban-nhap/
