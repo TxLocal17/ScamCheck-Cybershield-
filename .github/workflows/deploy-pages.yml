@@ -6,10 +6,19 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,10 +33,11 @@ jobs:
           printf '%s\n' 'const GEMINI_API_KEY = "${{ secrets.GEMINI_API_KEY }}";' > gemini-config.js
           ls -la gemini-config.js
 
-      - name: Deploy len nhanh gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: .
-          exclude_assets: .github
+          path: .
+
+      - name: Deploy len GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

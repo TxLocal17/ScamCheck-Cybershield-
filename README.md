@@ -28,13 +28,10 @@ Công cụ web giúp kiểm tra nhanh tin nhắn nghi ngờ lừa đảo (SMS, Z
 ### Bước 1 — Thêm Secret
 Settings → Secrets → Actions → `GEMINI_API_KEY` = key mentor cấp
 
-### Bước 2 — Đổi nguồn Pages
-Settings → Pages → Source: **Deploy from a branch**
-- Branch: **`gh-pages`**
-- Folder: **`/ (root)`**
-- Save
+### Bước 2 — Đổi nguồn Pages (bắt buộc)
+Settings → Pages → Source: **GitHub Actions**
 
-(Không chọn "GitHub Actions" — workflow sẽ tự đẩy code lên nhánh `gh-pages`.)
+> Không dùng nhánh `gh-pages` — GitHub Push Protection sẽ chặn file chứa API key khi push lên Git.
 
 ### Bước 3 — Push code
 Mỗi lần push `main`, workflow tự deploy lên `gh-pages`.
