@@ -336,8 +336,8 @@ function bindCrisisButtons(data, root = resultBox) {
             try {
                 const hotlines = await ensureHotlines();
                 const raw = await callGemini(buildRescuerPrompt(data.message, data.detective, choice, hotlines));
-                const steps = parseRescuerResult(raw);
-                resultEl.innerHTML = renderRescuerSteps(steps);
+                const steps = sanitizeRescuerSteps(parseRescuerResult(raw), hotlines);
+                resultEl.innerHTML = renderRescuerSteps(steps, hotlines);
             } catch (error) {
                 resultEl.innerHTML = `<p class="result-error-inline">${escapeHtml(getUserErrorMessage(error))}</p>`;
             }
@@ -345,18 +345,26 @@ function bindCrisisButtons(data, root = resultBox) {
     });
 }
 
-function renderRescuerSteps(steps) {
+function renderRescuerSteps(steps, hotlines) {
     if (!steps.length) {
-        return `<p>Gọi tổng đài ngân hàng in trên thẻ ngay và báo công an số 113 nếu đã chuyển tiền hoặc lộ mã OTP.</p>`;
+        return `<p>${escapeHtml(getDefaultRescuerMessage(hotlines))}</p>`;
     }
 
-    const items = steps.map((step, i) => `
+    const items = steps.map((step, i) => {
+        let phoneHtml = "";
+        if (step.phone) {
+            const label = step.phoneLabel ? `${step.phoneLabel}: ` : "";
+            phoneHtml = `<p class="rescuer-phone">Gọi ${escapeHtml(label)}${escapeHtml(step.phone)}</p>`;
+        }
+
+        return `
         <li class="rescuer-step">
             <strong>Bước ${i + 1}: ${escapeHtml(step.action || "")}</strong>
-            ${step.phone ? `<p class="rescuer-phone">Gọi: ${escapeHtml(step.phone)}</p>` : ""}
+            ${phoneHtml}
             ${step.script ? `<p class="rescuer-script">"${escapeHtml(step.script)}"</p>` : ""}
         </li>
-    `).join("");
+    `;
+    }).join("");
 
     return `
         <div class="rescuer-section">
@@ -364,6 +372,100 @@ function renderRescuerSteps(steps) {
             <ol class="rescuer-list">${items}</ol>
         </div>
     `;
+}
+
+function getDefaultRescuerMessage(hotlines) {
+    const police = (hotlines?.authorities || []).find((entry) => normalizePhoneDigits(entry.phone) === "113");
+    const bank = (hotlines?.banks || [])[0];
+    const parts = ["Gọi tổng đài ngân hàng in trên thẻ ngay"];
+
+    if (bank?.phone) {
+        parts.push(`hoặc ${bank.name} ${bank.phone}`);
+    }
+
+    if (police?.phone) {
+        parts.push(`báo công an ${police.phone}`);
+    }
+
+    parts.push("nếu đã chuyển tiền hoặc lộ mã OTP");
+    return parts.join(", ") + ".";
+}
+
+function buildHotlineIndex(hotlines) {
+    return [...(hotlines?.banks || []), ...(hotlines?.authorities || [])].map((entry) => ({
+        name: entry.name,
+        phone: entry.phone,
+        digits: normalizePhoneDigits(entry.phone)
+    }));
+}
+
+function normalizePhoneDigits(value) {
+    let digits = String(value || "").replace(/\D/g, "");
+
+    if (digits.startsWith("84") && digits.length > 10) {
+        digits = "0" + digits.slice(2);
+    }
+
+    return digits;
+}
+
+function resolveOfficialPhone(value, hotlineIndex) {
+    const digits = normalizePhoneDigits(value);
+    if (!digits) {
+        return null;
+    }
+
+    const exact = hotlineIndex.find((entry) => entry.digits === digits);
+    if (exact) {
+        return exact;
+    }
+
+    for (const entry of hotlineIndex) {
+        if (entry.digits.length >= 8 && (digits.endsWith(entry.digits) || entry.digits.endsWith(digits))) {
+            return entry;
+        }
+    }
+
+    return null;
+}
+
+function sanitizeTextPhones(text, hotlineIndex) {
+    if (!text) {
+        return "";
+    }
+
+    return String(text).replace(/(?:\+?84|0)[\d\s.\-]{2,16}\d|\b\d{3,4}\b/g, (match) => {
+        const official = resolveOfficialPhone(match, hotlineIndex);
+
+        if (official) {
+            return official.phone;
+        }
+
+        const digits = normalizePhoneDigits(match);
+        if (digits.length >= 3) {
+            console.warn("Loai bo so khong co trong hotlines.json:", match);
+            return "so tong dai in tren the ngan hang";
+        }
+
+        return match;
+    });
+}
+
+function sanitizeRescuerSteps(steps, hotlines) {
+    const hotlineIndex = buildHotlineIndex(hotlines);
+
+    return steps
+        .map((step) => {
+            const official = step.phone ? resolveOfficialPhone(step.phone, hotlineIndex) : null;
+
+            return {
+                action: sanitizeTextPhones(step.action, hotlineIndex),
+                phone: official ? official.phone : "",
+                phoneLabel: official ? official.name : "",
+                script: sanitizeTextPhones(step.script, hotlineIndex)
+            };
+        })
+        .filter((step) => step.action || step.phone || step.script);
 }
 
 async function ensureHotlines() {
