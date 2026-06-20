@@ -23,6 +23,13 @@ const CRISIS_CHOICES = [
     { id: "otp", label: "Đã cung cấp mã xác thực" }
 ];
 
+const LIBRARY_CATEGORY_CLASS = {
+    "giả ngân hàng": "cat-bank",
+    "giả cơ quan công an": "cat-police",
+    "trúng thưởng": "cat-prize",
+    "giả đơn vị giao hàng": "cat-delivery"
+};
+
 let hotlinesData = null;
 let scamTypesData = [];
 let currentMessage = "";
@@ -140,7 +147,7 @@ async function runCheck() {
 
     currentMessage = message;
     checkButton.disabled = true;
-    showLoading("Đang phân tích tin nhắn...");
+    showLoading("🔍 Thám tử đang phân tích tin nhắn...");
     lastFullResult = null;
 
     try {
@@ -151,7 +158,7 @@ async function runCheck() {
         let psychologistError = null;
 
         if (shouldCallPsychologist(detective.riskLevel)) {
-            showLoading("Thám tử xong. Cô tâm lý đang giải thích...");
+            showLoading("💬 Cô tâm lý đang giải thích...");
             try {
                 const psychRaw = await callGemini(buildPsychologistPrompt(message, detective));
                 psychologist = parsePsychologistResult(psychRaw);
@@ -173,6 +180,19 @@ async function runCheck() {
 
 function shouldCallPsychologist(riskLevel) {
     return riskLevel === "Nghi ngờ" || riskLevel === "Nguy hiểm";
+}
+
+function buildSectionHeading(icon, title) {
+    return `
+        <h2 class="section-title">
+            <span class="section-icon" aria-hidden="true">${icon}</span>
+            <span>${escapeHtml(title)}</span>
+        </h2>
+    `;
+}
+
+function getLibraryCategoryClass(category) {
+    return LIBRARY_CATEGORY_CLASS[category] || "";
 }
 
 function showLoading(text) {
@@ -199,7 +219,7 @@ function renderFullResult(data, options = {}) {
     if (signs.length > 0 && message) {
         highlightedHtml = `
             <div class="original-section">
-                <h2 class="section-title">Tin gốc (đoạn đáng ngờ được tô vàng)</h2>
+                ${buildSectionHeading("📄", "Tin gốc (đoạn đáng ngờ được tô vàng)")}
                 <div class="original-message">${highlightPhrasesInText(message, signs.map((s) => s.phrase))}</div>
             </div>
         `;
@@ -215,22 +235,22 @@ function renderFullResult(data, options = {}) {
             </article>
         `).join("");
         signsHtml = `
-            <div class="signs-section detective-section">
-                <h2 class="section-title">Phân tích kỹ thuật (Thám tử)</h2>
+            <div class="signs-section character-panel character-detective">
+                ${buildSectionHeading("🔍", "Phân tích kỹ thuật (Thám tử)")}
                 <div class="signs-list">${signCards}</div>
             </div>
         `;
     } else if (detective.riskLevel === "An toàn") {
         signsHtml = `
-            <div class="detective-section">
-                <h2 class="section-title">Phân tích kỹ thuật (Thám tử)</h2>
+            <div class="character-panel character-detective">
+                ${buildSectionHeading("🔍", "Phân tích kỹ thuật (Thám tử)")}
                 <p class="safe-note">Không thấy câu nào đặc biệt đáng ngờ trong tin này.</p>
             </div>
         `;
     } else {
         signsHtml = `
-            <div class="detective-section">
-                <h2 class="section-title">Phân tích kỹ thuật (Thám tử)</h2>
+            <div class="character-panel character-detective">
+                ${buildSectionHeading("🔍", "Phân tích kỹ thuật (Thám tử)")}
             </div>
         `;
     }
@@ -238,15 +258,15 @@ function renderFullResult(data, options = {}) {
     let psychHtml = "";
     if (psychologist?.explanation) {
         psychHtml = `
-            <div class="psychologist-section">
-                <h2 class="section-title">Hiểu vì sao mình suýt tin (Cô tâm lý)</h2>
+            <div class="character-panel character-psychologist">
+                ${buildSectionHeading("💬", "Hiểu vì sao mình suýt tin (Cô tâm lý)")}
                 <p class="psychologist-text">${escapeHtml(psychologist.explanation)}</p>
             </div>
         `;
     } else if (psychologistError) {
         psychHtml = `
-            <div class="psychologist-section psychologist-error">
-                <h2 class="section-title">Hiểu vì sao mình suýt tin (Cô tâm lý)</h2>
+            <div class="character-panel character-psychologist">
+                ${buildSectionHeading("💬", "Hiểu vì sao mình suýt tin (Cô tâm lý)")}
                 <p class="psychologist-text">Cô tâm lý đang bận, vui lòng thử lại sau.</p>
             </div>
         `;
@@ -256,8 +276,8 @@ function renderFullResult(data, options = {}) {
     let actionsHtml = "";
     if (actions.length > 0) {
         actionsHtml = `
-            <div class="actions-section">
-                <h2 class="section-title">Nên làm gì tiếp theo</h2>
+            <div class="character-panel character-actions">
+                ${buildSectionHeading("✅", "Nên làm gì tiếp theo")}
                 <ul class="actions-list">${actions.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
             </div>
         `;
@@ -265,7 +285,8 @@ function renderFullResult(data, options = {}) {
 
     const shareHtml = options.readOnly ? "" : `
         <div class="share-section">
-            <button type="button" id="shareCardBtn" class="secondary-btn">Tạo thẻ cảnh báo chia sẻ</button>
+            ${buildSectionHeading("📤", "Chia sẻ cho người thân")}
+            <button type="button" id="shareCardBtn" class="secondary-btn">Tạo thẻ cảnh báo</button>
             <div id="shareCardPreview" class="share-preview hidden"></div>
         </div>
     `;
@@ -301,8 +322,8 @@ function buildCrisisQuestionHtml() {
     ).join("");
 
     return `
-        <div class="crisis-section" id="crisisSection">
-            <h2 class="section-title">Bác đã làm gì rồi?</h2>
+        <div class="character-panel character-crisis" id="crisisSection">
+            ${buildSectionHeading("❓", "Bác đã làm gì rồi?")}
             <div class="crisis-buttons">${buttons}</div>
             <div id="crisisResult" class="crisis-result hidden"></div>
         </div>
@@ -331,7 +352,7 @@ function bindCrisisButtons(data, root = resultBox) {
                 return;
             }
 
-            resultEl.innerHTML = `<p class="loading-text">Người ứng cứu đang soạn hướng dẫn...</p>`;
+            resultEl.innerHTML = `<p class="loading-text">🆘 Người ứng cứu đang soạn hướng dẫn...</p>`;
 
             try {
                 const hotlines = await ensureHotlines();
@@ -367,8 +388,8 @@ function renderRescuerSteps(steps, hotlines) {
     }).join("");
 
     return `
-        <div class="rescuer-section">
-            <h3 class="rescuer-title">Hướng dẫn ứng cứu (Người ứng cứu)</h3>
+        <div class="character-panel character-rescuer">
+            ${buildSectionHeading("🆘", "Hướng dẫn ứng cứu (Người ứng cứu)")}
             <ol class="rescuer-list">${items}</ol>
         </div>
     `;
@@ -625,7 +646,7 @@ function renderHistoryList() {
     historyDetail.classList.add("hidden");
 
     if (!items.length) {
-        historyList.innerHTML = `<p class="empty-state">Chưa có tin nào được kiểm tra.</p>`;
+        historyList.innerHTML = `<p class="empty-state">📋 Chưa có tin nào.<br>Hãy kiểm tra tin đầu tiên ở tab Kiểm tra.</p>`;
         return;
     }
 
@@ -673,12 +694,15 @@ function renderLibraryList() {
         ? scamTypesData
         : scamTypesData.filter((t) => t.category === libraryFilter);
 
-    libraryList.innerHTML = filtered.map((item) => `
+    libraryList.innerHTML = filtered.map((item) => {
+        const catClass = getLibraryCategoryClass(item.category);
+        return `
         <button type="button" class="library-item" data-id="${escapeHtml(item.id)}">
-            <span class="library-category">${escapeHtml(item.category)}</span>
+            <span class="library-category ${catClass}">${escapeHtml(item.category)}</span>
             <span class="library-name">${escapeHtml(item.name)}</span>
         </button>
-    `).join("");
+    `;
+    }).join("");
 
     libraryList.querySelectorAll(".library-item").forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -686,8 +710,8 @@ function renderLibraryList() {
             if (!item) return;
             libraryDetail.classList.remove("hidden");
             libraryDetail.innerHTML = `
-                <h2>${escapeHtml(item.name)}</h2>
-                <p class="library-cat-label">${escapeHtml(item.category)}</p>
+                <span class="library-category ${getLibraryCategoryClass(item.category)}">${escapeHtml(item.category)}</span>
+                <h3 class="library-detail-title">${escapeHtml(item.name)}</h3>
                 <p>${escapeHtml(item.description)}</p>
                 <div class="library-example">
                     <strong>Ví dụ tin nhắn:</strong>
