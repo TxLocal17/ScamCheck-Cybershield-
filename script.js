@@ -512,55 +512,55 @@ async function generateShareCard(data) {
         }
 
         const canvas = document.createElement("canvas");
-    canvas.width = 600;
-    canvas.height = 800;
-    const ctx = canvas.getContext("2d");
-    const risk = data.detective.riskLevel;
-    const colors = {
-        "An toàn": "#2e7d32",
-        "Nghi ngờ": "#f9a825",
-        "Nguy hiểm": "#d93025"
-    };
-    const bg = colors[risk] || "#f9a825";
+        canvas.width = 600;
+        canvas.height = 800;
+        const ctx = canvas.getContext("2d");
+        const risk = data.detective.riskLevel;
+        const colors = {
+            "An toàn": "#2e7d32",
+            "Nghi ngờ": "#f9a825",
+            "Nguy hiểm": "#d93025"
+        };
+        const bg = colors[risk] || "#f9a825";
 
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, 600, 800);
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, 600, 120);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 36px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(risk.toUpperCase(), 300, 55);
-    ctx.font = "20px Arial";
-    ctx.fillText("ScamCheck", 300, 95);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, 600, 800);
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, 600, 120);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 36px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(risk.toUpperCase(), 300, 55);
+        ctx.font = "20px Arial";
+        ctx.fillText("ScamCheck", 300, 95);
 
-    ctx.fillStyle = "#111";
-    ctx.textAlign = "left";
-    ctx.font = "22px Arial";
-    wrapCanvasText(ctx, data.detective.summary || "", 30, 160, 540, 30);
+        ctx.fillStyle = "#111";
+        ctx.textAlign = "left";
+        ctx.font = "22px Arial";
+        wrapCanvasText(ctx, data.detective.summary || "", 30, 160, 540, 30);
 
-    ctx.font = "bold 20px Arial";
-    ctx.fillText("Dấu hiệu chính:", 30, 280);
-    ctx.font = "18px Arial";
-    let y = 315;
-    (data.detective.signs || []).slice(0, 3).forEach((sign) => {
-        wrapCanvasText(ctx, `• ${sign.phrase}`, 30, y, 540, 26);
-        y += 55;
-    });
+        ctx.font = "bold 20px Arial";
+        ctx.fillText("Dấu hiệu chính:", 30, 280);
+        ctx.font = "18px Arial";
+        let y = 315;
+        (data.detective.signs || []).slice(0, 3).forEach((sign) => {
+            wrapCanvasText(ctx, `• ${sign.phrase}`, 30, y, 540, 26);
+            y += 55;
+        });
 
-    const qrCanvas = document.createElement("canvas");
-    await QRCode.toCanvas(qrCanvas, SITE_URL, { width: 140, margin: 1 });
-    ctx.drawImage(qrCanvas, 230, 620, 140, 140);
-    ctx.font = "16px Arial";
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#555";
-    ctx.fillText("Quét mã để dùng ScamCheck", 300, 780);
+        const qrCanvas = document.createElement("canvas");
+        await QRCode.toCanvas(qrCanvas, SITE_URL, { width: 140, margin: 1 });
+        ctx.drawImage(qrCanvas, 230, 620, 140, 140);
+        ctx.font = "16px Arial";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#555";
+        ctx.fillText("Quét mã để dùng ScamCheck", 300, 780);
 
-    const dataUrl = canvas.toDataURL("image/png");
-    preview.innerHTML = `
-        <img src="${dataUrl}" alt="Thẻ cảnh báo ScamCheck" class="share-image">
-        <a href="${dataUrl}" download="scamcheck-canh-bao.png" class="secondary-btn download-btn">Tải ảnh về máy</a>
-    `;
+        const dataUrl = canvas.toDataURL("image/png");
+        preview.innerHTML = `
+            <img src="${dataUrl}" alt="Thẻ cảnh báo ScamCheck" class="share-image">
+            <a href="${dataUrl}" download="scamcheck-canh-bao.png" class="secondary-btn download-btn">Tải ảnh về máy</a>
+        `;
     } catch (error) {
         preview.innerHTML = `<p class="result-error-inline">Không tạo được thẻ. Vui lòng thử lại sau.</p>`;
         console.error(error);
