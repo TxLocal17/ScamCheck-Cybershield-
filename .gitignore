@@ -1,6 +1,5 @@
 # API key — không bao giờ đưa lên Git
 config.js
-gemini-config.js
 
 # File chứa secret khác
 keys.txt

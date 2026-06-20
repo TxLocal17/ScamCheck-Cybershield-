@@ -22,6 +22,7 @@ jobs:
             exit 1
           fi
           printf '%s\n' 'const GEMINI_API_KEY = "${{ secrets.GEMINI_API_KEY }}";' > gemini-config.js
+          test -f gemini-config.js || (echo "::error::Khong tao duoc gemini-config.js" && exit 1)
 
       - name: Deploy len nhanh gh-pages
         uses: peaceiris/actions-gh-pages@v4
