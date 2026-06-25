@@ -133,7 +133,7 @@ body::after {
     align-items: center;
     gap: 10px;
     flex: 0 1 auto;
-    padding: 8px 12px;
+    padding: 6px 10px;
     background: #f1f5f9;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
@@ -146,31 +146,56 @@ body::after {
     white-space: nowrap;
 }
 
-.text-scale-slider {
-    width: 88px;
-    height: 6px;
+.text-scale-stepper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.text-scale-btn {
+    width: 36px;
+    height: 36px;
     margin: 0;
-    accent-color: var(--primary);
+    padding: 0;
+    font-family: inherit;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--primary);
     cursor: pointer;
+    transition: background var(--transition), border-color var(--transition), transform var(--transition);
+}
+
+.text-scale-btn:hover:not(:disabled) {
+    background: var(--primary-light);
+    border-color: var(--primary);
+}
+
+.text-scale-btn:active:not(:disabled) {
+    transform: scale(0.94);
+}
+
+.text-scale-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
 }
 
 .text-scale-value {
-    min-width: 2.5em;
-    font-size: 13px;
+    min-width: 3em;
+    padding: 0 4px;
+    font-size: 14px;
     font-weight: 800;
     color: var(--primary);
-    text-align: right;
+    text-align: center;
 }
 
 @media (max-width: 480px) {
     .text-scale-control {
         width: 100%;
         justify-content: space-between;
-    }
-
-    .text-scale-slider {
-        flex: 1;
-        max-width: 160px;
     }
 }
 

@@ -5,6 +5,7 @@ const TEXT_SCALE_KEY = "scamcheck_text_scale";
 const HISTORY_LIMIT = 10;
 const TEXT_SCALE_MIN = 1;
 const TEXT_SCALE_MAX = 2;
+const TEXT_SCALE_STEP = 0.1;
 const SITE_URL = "https://txlocal17.github.io/ScamCheck-Cybershield-/";
 
 const RISK_CONFIG = {
@@ -51,7 +52,8 @@ const historyDetail = document.getElementById("historyDetail");
 const libraryList = document.getElementById("libraryList");
 const libraryDetail = document.getElementById("libraryDetail");
 const brandHome = document.getElementById("brandHome");
-const textScaleSlider = document.getElementById("textScaleSlider");
+const textScaleDown = document.getElementById("textScaleDown");
+const textScaleUp = document.getElementById("textScaleUp");
 const textScaleValue = document.getElementById("textScaleValue");
 
 init();
@@ -73,9 +75,22 @@ function bindHeaderControls() {
     const savedScale = parseFloat(localStorage.getItem(TEXT_SCALE_KEY));
     applyTextScale(Number.isFinite(savedScale) ? savedScale : TEXT_SCALE_MIN);
 
-    textScaleSlider?.addEventListener("input", () => {
-        applyTextScale(parseInt(textScaleSlider.value, 10) / 100);
+    textScaleDown?.addEventListener("click", () => {
+        applyTextScale(getCurrentTextScale() - TEXT_SCALE_STEP);
     });
+
+    textScaleUp?.addEventListener("click", () => {
+        applyTextScale(getCurrentTextScale() + TEXT_SCALE_STEP);
+    });
+}
+
+function getCurrentTextScale() {
+    const saved = parseFloat(localStorage.getItem(TEXT_SCALE_KEY));
+    return Number.isFinite(saved) ? saved : TEXT_SCALE_MIN;
+}
+
+function formatTextScaleLabel(scale) {
+    return scale % 1 === 0 ? `${scale}x` : `${scale.toFixed(1)}x`;
 }
 
 function goHome() {
@@ -87,7 +102,8 @@ function goHome() {
 }
 
 function applyTextScale(scale) {
-    const clamped = Math.min(TEXT_SCALE_MAX, Math.max(TEXT_SCALE_MIN, scale));
+    const rounded = Math.round(scale * 10) / 10;
+    const clamped = Math.min(TEXT_SCALE_MAX, Math.max(TEXT_SCALE_MIN, rounded));
     document.documentElement.style.setProperty("--text-scale", String(clamped));
     document.body.style.zoom = clamped;
 
@@ -98,14 +114,16 @@ function applyTextScale(scale) {
 
     localStorage.setItem(TEXT_SCALE_KEY, String(clamped));
 
-    if (textScaleSlider) {
-        textScaleSlider.value = String(Math.round(clamped * 100));
-        textScaleSlider.setAttribute("aria-valuenow", textScaleSlider.value);
+    if (textScaleValue) {
+        textScaleValue.textContent = formatTextScaleLabel(clamped);
     }
 
-    if (textScaleValue) {
-        const label = clamped % 1 === 0 ? `${clamped}x` : `${clamped.toFixed(1)}x`;
-        textScaleValue.textContent = label;
+    if (textScaleDown) {
+        textScaleDown.disabled = clamped <= TEXT_SCALE_MIN;
+    }
+
+    if (textScaleUp) {
+        textScaleUp.disabled = clamped >= TEXT_SCALE_MAX;
     }
 }
 
