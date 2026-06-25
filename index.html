@@ -3,47 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScamCheck</title>
+    <title>ScamCheck — Bảo vệ bạn khỏi lừa đảo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <header class="app-header">
-        <p class="app-logo" aria-hidden="true">🛡️</p>
-        <h1 class="app-title">ScamCheck</h1>
-        <p class="app-tagline">Kiểm tra tin nhắn lạ — bảo vệ ông bà, bố mẹ</p>
+        <div class="header-inner">
+            <div class="brand-mark" aria-hidden="true">S</div>
+            <div class="header-copy">
+                <h1 class="app-title">ScamCheck</h1>
+                <p class="app-tagline">Kiểm tra tin nhắn lạ — bảo vệ ông bà, bố mẹ</p>
+            </div>
+        </div>
     </header>
 
     <main class="container">
         <!-- Trang kiểm tra -->
         <section id="viewHome" class="view">
-            <p class="subtitle">Dán tin nhắn nghi ngờ lừa đảo vào ô bên dưới, rồi bấm Kiểm tra.</p>
+            <div class="home-badge">
+                <span class="pulse-dot" aria-hidden="true"></span>
+                AI SECURITY FOR VIETNAM
+            </div>
+            <h2 class="home-heading">Phân tích tin nhắn nghi ngờ</h2>
+            <p class="subtitle">Dán nội dung tin nhắn bạn nghi ngờ vào ô bên dưới, rồi bấm Kiểm tra.</p>
 
             <div class="sample-buttons" role="group" aria-label="Tin mẫu thử nhanh">
                 <p class="sample-label">Thử nhanh (không tốn công tìm tin):</p>
-                <button type="button" class="sample-btn" data-sample="bank">
-                    <span class="sample-icon" aria-hidden="true">🏦</span>
-                    <span>Tin giả ngân hàng</span>
-                </button>
-                <button type="button" class="sample-btn" data-sample="police">
-                    <span class="sample-icon" aria-hidden="true">👮</span>
-                    <span>Tin giả công an</span>
-                </button>
-                <button type="button" class="sample-btn" data-sample="prize">
-                    <span class="sample-icon" aria-hidden="true">🎁</span>
-                    <span>Tin trúng thưởng</span>
-                </button>
+                <div class="sample-grid">
+                    <button type="button" class="sample-btn" data-sample="bank">
+                        <span class="sample-icon" aria-hidden="true">🏦</span>
+                        <span class="sample-copy">
+                            <span class="sample-tag sample-tag-bank">Giả ngân hàng</span>
+                            <span class="sample-desc">"Tài khoản bị khóa..."</span>
+                        </span>
+                    </button>
+                    <button type="button" class="sample-btn" data-sample="police">
+                        <span class="sample-icon" aria-hidden="true">👮</span>
+                        <span class="sample-copy">
+                            <span class="sample-tag sample-tag-police">Giả công an</span>
+                            <span class="sample-desc">"Liên quan vụ án..."</span>
+                        </span>
+                    </button>
+                    <button type="button" class="sample-btn" data-sample="prize">
+                        <span class="sample-icon" aria-hidden="true">🎁</span>
+                        <span class="sample-copy">
+                            <span class="sample-tag sample-tag-prize">Trúng thưởng</span>
+                            <span class="sample-desc">"Chúc mừng trúng quà..."</span>
+                        </span>
+                    </button>
+                </div>
             </div>
 
-            <label class="input-label" for="messageInput">Nội dung tin nhắn</label>
-            <textarea
-                id="messageInput"
-                maxlength="5000"
-                placeholder="Ví dụ: Tài khoản của quý khách sẽ bị khóa. Bấm vào link để xác nhận..."
-            ></textarea>
-            <p id="charCount" class="char-count">0 / 5000 ký tự</p>
+            <div class="input-panel">
+                <label class="input-label" for="messageInput">Nội dung tin nhắn</label>
+                <textarea
+                    id="messageInput"
+                    maxlength="5000"
+                    placeholder="Dán nội dung tin nhắn nghi ngờ vào đây..."
+                ></textarea>
+                <p id="charCount" class="char-count">0 / 5000 ký tự</p>
+            </div>
 
-            <button id="checkButton" type="button" class="btn-primary">Kiểm tra</button>
+            <button id="checkButton" type="button" class="btn-primary">⚡ Kiểm tra ngay</button>
 
             <section id="resultBox" class="result-box" aria-live="polite">
                 <p class="result-placeholder">Kết quả sẽ hiển thị ở đây sau khi bấm Kiểm tra.</p>
