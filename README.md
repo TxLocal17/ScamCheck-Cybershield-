@@ -2,6 +2,10 @@
 
 Công cụ web giúp kiểm tra nhanh tin nhắn nghi ngờ lừa đảo (SMS, Zalo, Messenger, email).
 
+# ScamCheck - Live Site (Github Page làm)
+
+[https://txlocal17.github.io/ScamCheck-Cybershield-/](url)
+
 **Cấp hiện tại:** 5 — Đầy đủ 3 nhân vật AI + Thư viện + Thẻ chia sẻ
 
 > ScamCheck là công cụ giáo dục do nhóm học viên phát triển. Kết quả không thay thế cảnh báo chính thức từ ngân hàng hoặc cơ quan chức năng.
