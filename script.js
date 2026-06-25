@@ -36,6 +36,8 @@ const LIBRARY_CATEGORY_CLASS = {
 
 let hotlinesData = null;
 let scamTypesData = [];
+let quizData = [];
+let quizState = { index: 0, score: 0, answered: false };
 let currentMessage = "";
 let lastFullResult = null;
 let libraryFilter = "all";
@@ -47,6 +49,7 @@ const charCount = document.getElementById("charCount");
 const viewHome = document.getElementById("viewHome");
 const viewHistory = document.getElementById("viewHistory");
 const viewLibrary = document.getElementById("viewLibrary");
+const viewQuiz = document.getElementById("viewQuiz");
 const historyList = document.getElementById("historyList");
 const historyDetail = document.getElementById("historyDetail");
 const libraryList = document.getElementById("libraryList");
@@ -55,6 +58,13 @@ const brandHome = document.getElementById("brandHome");
 const textScaleDown = document.getElementById("textScaleDown");
 const textScaleUp = document.getElementById("textScaleUp");
 const textScaleValue = document.getElementById("textScaleValue");
+const quizProgress = document.getElementById("quizProgress");
+const quizScore = document.getElementById("quizScore");
+const quizMessage = document.getElementById("quizMessage");
+const quizBtnFake = document.getElementById("quizBtnFake");
+const quizBtnReal = document.getElementById("quizBtnReal");
+const quizFeedback = document.getElementById("quizFeedback");
+const quizNextBtn = document.getElementById("quizNextBtn");
 
 init();
 
@@ -62,6 +72,7 @@ function init() {
     bindHomeEvents();
     bindRouter();
     bindHeaderControls();
+    bindQuizEvents();
     loadStaticData();
     normalizeHomeHash();
     navigateTo(getRouteFromHash());
@@ -210,6 +221,7 @@ function getRouteFromHash() {
     if (!hash || hash === "/") return "/";
     if (hash.startsWith("/history") || hash === "history") return "/history";
     if (hash.startsWith("/library") || hash === "library") return "/library";
+    if (hash.startsWith("/quiz") || hash === "quiz") return "/quiz";
     return "/";
 }
 
@@ -217,6 +229,7 @@ function navigateTo(route) {
     viewHome.classList.toggle("hidden", route !== "/");
     viewHistory.classList.toggle("hidden", route !== "/history");
     viewLibrary.classList.toggle("hidden", route !== "/library");
+    viewQuiz.classList.toggle("hidden", route !== "/quiz");
 
     document.querySelectorAll(".nav-link").forEach((link) => {
         link.classList.toggle("active", link.dataset.route === route);
@@ -224,19 +237,121 @@ function navigateTo(route) {
 
     if (route === "/history") renderHistoryList();
     if (route === "/library") renderLibraryList();
+    if (route === "/quiz") renderQuiz();
 }
 
 async function loadStaticData() {
     try {
-        const [hotlinesRes, typesRes] = await Promise.all([
+        const [hotlinesRes, typesRes, quizRes] = await Promise.all([
             fetch("data/hotlines.json"),
-            fetch("data/scam-types.json")
+            fetch("data/scam-types.json"),
+            fetch("data/quiz.json")
         ]);
         if (hotlinesRes.ok) hotlinesData = await hotlinesRes.json();
         if (typesRes.ok) scamTypesData = await typesRes.json();
+        if (quizRes.ok) quizData = await quizRes.json();
     } catch (error) {
         console.error("Không tải được dữ liệu tĩnh:", error);
     }
+}
+
+function bindQuizEvents() {
+    quizBtnFake?.addEventListener("click", () => handleQuizAnswer(true));
+    quizBtnReal?.addEventListener("click", () => handleQuizAnswer(false));
+    quizNextBtn?.addEventListener("click", () => {
+        if (quizState.index >= quizData.length) {
+            resetQuiz();
+            document.getElementById("quizChoices")?.classList.remove("hidden");
+            renderQuiz();
+            return;
+        }
+        advanceQuiz();
+    });
+}
+
+function resetQuiz() {
+    quizState = { index: 0, score: 0, answered: false };
+}
+
+function renderQuiz() {
+    if (!quizData.length) {
+        quizMessage.textContent = "Chưa tải được câu hỏi. Bác thử tải lại trang nhé.";
+        quizProgress.textContent = "Câu 0/0";
+        quizScore.textContent = "Điểm: 0";
+        quizChoicesHide();
+        return;
+    }
+
+    if (quizState.index >= quizData.length) {
+        renderQuizComplete();
+        return;
+    }
+
+    const question = quizData[quizState.index];
+    quizMessage.textContent = question.message;
+    quizProgress.textContent = `Câu ${quizState.index + 1}/${quizData.length}`;
+    quizScore.textContent = `Điểm: ${quizState.score}`;
+    quizFeedback.classList.add("hidden");
+    quizNextBtn.classList.add("hidden");
+    quizState.answered = false;
+    setQuizChoicesEnabled(true);
+}
+
+function quizChoicesHide() {
+    document.getElementById("quizChoices")?.classList.add("hidden");
+}
+
+function setQuizChoicesEnabled(enabled) {
+    if (quizBtnFake) quizBtnFake.disabled = !enabled;
+    if (quizBtnReal) quizBtnReal.disabled = !enabled;
+}
+
+function handleQuizAnswer(userPickedFake) {
+    if (quizState.answered || !quizData.length) return;
+
+    const question = quizData[quizState.index];
+    const isCorrect = userPickedFake === question.isFake;
+    quizState.answered = true;
+    setQuizChoicesEnabled(false);
+
+    if (isCorrect) {
+        quizState.score += 1;
+        quizScore.textContent = `Điểm: ${quizState.score}`;
+        quizFeedback.className = "quiz-feedback quiz-feedback-correct";
+        quizFeedback.textContent = `Đúng rồi bác! ${question.explanation}`;
+    } else {
+        quizFeedback.className = "quiz-feedback quiz-feedback-wrong";
+        quizFeedback.textContent = `Chưa đúng bác. ${question.explanation}`;
+    }
+
+    quizFeedback.classList.remove("hidden");
+    quizNextBtn.textContent = quizState.index >= quizData.length - 1 ? "Xem kết quả" : "Câu tiếp theo";
+    quizNextBtn.classList.remove("hidden");
+}
+
+function advanceQuiz() {
+    if (!quizState.answered) return;
+
+    quizState.index += 1;
+    renderQuiz();
+}
+
+function renderQuizComplete() {
+    const total = quizData.length;
+    const score = quizState.score;
+    quizProgress.textContent = "Hoàn thành";
+    quizScore.textContent = `Điểm: ${score}/${total}`;
+    quizMessage.textContent = score >= total * 0.7
+        ? "Giỏi lắm bác! Bác đã nhận ra khá nhiều tin lừa đảo."
+        : "Bác cứ luyện thêm vài lần nữa sẽ quen tay hơn.";
+    document.getElementById("quizChoices")?.classList.add("hidden");
+    quizFeedback.className = "quiz-feedback quiz-feedback-correct";
+    quizFeedback.textContent = score === total
+        ? "Xuất sắc bác! Bác trả lời đúng hết cả rồi."
+        : `Bác đúng ${score} trên ${total} câu. Hãy đọc kỹ link và yêu cầu chuyển tiền trong tin lạ.`;
+    quizFeedback.classList.remove("hidden");
+    quizNextBtn.textContent = "Làm lại";
+    quizNextBtn.classList.remove("hidden");
 }
 
 function updateCharCount() {

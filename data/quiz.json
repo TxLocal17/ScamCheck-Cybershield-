@@ -1,0 +1,62 @@
+[
+  {
+    "message": "Kính gửi quý khách, tài khoản Vietcombank của bạn sẽ bị khóa trong 2 giờ do giao dịch bất thường. Bấm ngay link xác minh: bit.ly/vcb-xacminh",
+    "isFake": true,
+    "explanation": "Ngân hàng không bao giờ yêu cầu bấm link lạ qua tin nhắn để tránh khóa tài khoản."
+  },
+  {
+    "message": "Techcombank: Ma OTP cua quy khach la 847291. TUYET DOI khong chia se ma nay cho bat ky ai, ke ca nhan vien ngan hang.",
+    "isFake": false,
+    "explanation": "Đây là tin OTP chuẩn, có cảnh báo không chia sẻ mã — bác cứ giữ bí mật mã đó."
+  },
+  {
+    "message": "Chúc mừng bác trúng iPhone 16 Pro! Nhận thưởng tại trungthuong-2026.com, đóng phí vận chuyển 500.000đ trong 24 giờ.",
+    "isFake": true,
+    "explanation": "Trúng thưởng bất ngờ kèm link lạ và đóng phí trước là dấu hiệu lừa đảo rất phổ biến."
+  },
+  {
+    "message": "Cục Cảnh sát điều tra: Bác đang liên quan vụ án rửa tiền. Gọi ngay 0901234567 trong 30 phút, nếu không sẽ bị bắt.",
+    "isFake": true,
+    "explanation": "Cơ quan công an không đe dọa bắt giữ hay yêu cầu làm việc qua tin nhắn với số lạ."
+  },
+  {
+    "message": "GHTK: Gói hàng #VN8921 chưa thanh toán phí 45.000đ. Cập nhật tại ghtk-thuhoi.com để nhận hàng hôm nay.",
+    "isFake": true,
+    "explanation": "Đơn vị giao hàng thật không bắt bác bấm link lạ để đóng phí ngoài ứng dụng chính thức."
+  },
+  {
+    "message": "Con về ăn cơm tối nhé mẹ, khoảng 6 giờ con tới.",
+    "isFake": false,
+    "explanation": "Tin nhắn cá nhân quen thuộc, không có link, không đòi tiền hay mã OTP — bác yên tâm."
+  },
+  {
+    "message": "Vietcombank: Quý khách trúng 50 triệu đồng. Chuyển 1 triệu phí xử lý trong 30 phút để nhận thưởng.",
+    "isFake": true,
+    "explanation": "Giải thưởng thật không bao giờ bắt chuyển tiền trước mới được nhận quà."
+  },
+  {
+    "message": "Phạt nguội: Xe bác vi phạm tốc độ. Thanh toán 800.000đ tại conganxuphat.vn để tránh phong tỏa bằng lái.",
+    "isFake": true,
+    "explanation": "Phạt giao thông chính thống không bắt nộp tiền qua website tên miền lạ như vậy."
+  },
+  {
+    "message": "Bác ơi, mai 8 giờ có lịch khám tái khám tại bệnh viện. Nhớ mang theo sổ khám bệnh nhé.",
+    "isFake": false,
+    "explanation": "Tin nhắn nhắc lịch hẹn rõ ràng, không có yêu cầu chuyển tiền hay cung cấp mã bí mật."
+  },
+  {
+    "message": "Shopee: Bạn được tặng 5.000.000đ voucher. Bấm nhận ngay tại shopee-khuyenmai.xyz trước khi hết hạn.",
+    "isFake": true,
+    "explanation": "Sàn thương mại điện tử không gửi voucher qua link .xyz — đó thường là trang giả mạo."
+  },
+  {
+    "message": "Ngân hàng thông báo: Thẻ ATM cần cập nhật sinh trắc học. Nhập OTP vừa nhận vào vietcornbank-verify.com",
+    "isFake": true,
+    "explanation": "Tên miền viết sai chính tả (vietcornbank) và đòi OTP qua link là dấu hiệu giả mạo rõ ràng."
+  },
+  {
+    "message": "BIDV thông báo: Giao dịch chuyển 2.000.000đ tới NGUYEN VAN A lúc 14:32 thành công. Số dư: 15.230.000đ.",
+    "isFake": false,
+    "explanation": "Tin biên lai giao dịch thông thường, không kèm link hay yêu cầu bác làm thêm việc gì."
+  }
+]

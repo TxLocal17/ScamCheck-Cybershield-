@@ -108,6 +108,25 @@
             <article id="libraryDetail" class="library-detail hidden"></article>
             <a href="./" class="back-link" id="backToHome">← Quay lại kiểm tra tin</a>
         </section>
+
+        <!-- Trang luyện tập -->
+        <section id="viewQuiz" class="view hidden">
+            <h2 class="page-title">Luyện tập cảnh giác</h2>
+            <p class="subtitle">Đọc tin nhắn và chọn: tin thật hay lừa đảo?</p>
+            <div class="quiz-panel">
+                <div class="quiz-meta">
+                    <span id="quizProgress" class="quiz-progress">Câu 1/12</span>
+                    <span id="quizScore" class="quiz-score">Điểm: 0</span>
+                </div>
+                <blockquote id="quizMessage" class="quiz-message">Đang tải câu hỏi...</blockquote>
+                <div id="quizChoices" class="quiz-choices" role="group" aria-label="Chọn tin thật hoặc lừa đảo">
+                    <button type="button" id="quizBtnFake" class="quiz-btn quiz-btn-fake">Lừa đảo</button>
+                    <button type="button" id="quizBtnReal" class="quiz-btn quiz-btn-real">Tin thật</button>
+                </div>
+                <div id="quizFeedback" class="quiz-feedback hidden" aria-live="polite"></div>
+                <button type="button" id="quizNextBtn" class="secondary-btn quiz-next-btn hidden">Câu tiếp theo</button>
+            </div>
+        </section>
     </main>
 
     <footer class="app-footer">
@@ -126,6 +145,10 @@
         <a href="#/library" class="nav-link" data-route="/library">
             <span class="nav-icon" aria-hidden="true">📚</span>
             <span>Thư viện</span>
+        </a>
+        <a href="#/quiz" class="nav-link" data-route="/quiz">
+            <span class="nav-icon" aria-hidden="true">🎯</span>
+            <span>Luyện tập</span>
         </a>
     </nav>
 
