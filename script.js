@@ -63,15 +63,11 @@ function init() {
     bindRouter();
     bindHeaderControls();
     loadStaticData();
+    normalizeHomeHash();
     navigateTo(getRouteFromHash());
 }
 
 function bindHeaderControls() {
-    brandHome?.addEventListener("click", (event) => {
-        event.preventDefault();
-        goHome();
-    });
-
     const savedScale = parseFloat(localStorage.getItem(TEXT_SCALE_KEY));
     applyTextScale(Number.isFinite(savedScale) ? savedScale : TEXT_SCALE_MIN);
 
@@ -94,21 +90,36 @@ function formatTextScaleLabel(scale) {
 }
 
 function goHome() {
-    window.location.hash = "#/";
+    updateUrlForRoute("/");
     navigateTo("/");
     historyDetail.classList.add("hidden");
     libraryDetail.classList.add("hidden");
     window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+function getScalableRoots() {
+    return [
+        document.querySelector(".container"),
+        document.querySelector(".app-footer"),
+        document.querySelector(".bottom-nav")
+    ];
+}
+
 function applyTextScale(scale) {
     const rounded = Math.round(scale * 10) / 10;
     const clamped = Math.min(TEXT_SCALE_MAX, Math.max(TEXT_SCALE_MIN, rounded));
     document.documentElement.style.setProperty("--text-scale", String(clamped));
-    document.body.style.zoom = clamped;
+    document.body.style.zoom = "";
+
+    getScalableRoots().forEach((el) => {
+        if (!el) return;
+        el.style.zoom = clamped;
+    });
 
     if (!CSS.supports("zoom", "1")) {
-        document.body.style.zoom = "";
+        getScalableRoots().forEach((el) => {
+            if (el) el.style.zoom = "";
+        });
         document.documentElement.style.fontSize = `${clamped * 100}%`;
     }
 
@@ -155,18 +166,50 @@ function bindHomeEvents() {
 
 function bindRouter() {
     window.addEventListener("hashchange", () => navigateTo(getRouteFromHash()));
+    window.addEventListener("popstate", () => navigateTo(getRouteFromHash()));
+
     document.querySelectorAll(".nav-link").forEach((link) => {
-        link.addEventListener("click", () => {
-            document.querySelectorAll(".nav-link").forEach((l) => l.classList.remove("active"));
-            link.classList.add("active");
+        link.addEventListener("click", (event) => {
+            event.preventDefault();
+            const route = link.dataset.route || "/";
+            if (route === "/") {
+                goHome();
+                return;
+            }
+            updateUrlForRoute(route);
+            navigateTo(route);
+        });
+    });
+
+    document.querySelectorAll(".brand-home, .back-link").forEach((link) => {
+        link.addEventListener("click", (event) => {
+            event.preventDefault();
+            goHome();
         });
     });
 }
 
+function updateUrlForRoute(route) {
+    const baseUrl = window.location.pathname + window.location.search;
+    if (route === "/") {
+        history.replaceState(null, "", baseUrl);
+        return;
+    }
+    history.replaceState(null, "", `${baseUrl}#${route}`);
+}
+
+function normalizeHomeHash() {
+    const hash = window.location.hash;
+    if (hash === "#/" || hash === "#") {
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+}
+
 function getRouteFromHash() {
-    const hash = window.location.hash.replace("#", "") || "/";
-    if (hash.startsWith("/history")) return "/history";
-    if (hash.startsWith("/library")) return "/library";
+    const hash = window.location.hash.replace(/^#/, "");
+    if (!hash || hash === "/") return "/";
+    if (hash.startsWith("/history") || hash === "history") return "/history";
+    if (hash.startsWith("/library") || hash === "library") return "/library";
     return "/";
 }
 
@@ -796,8 +839,7 @@ function renderLibraryList() {
             document.getElementById("tryInCheckBtn").addEventListener("click", () => {
                 messageInput.value = item.example;
                 updateCharCount();
-                window.location.hash = "#/";
-                navigateTo("/");
+                goHome();
             });
         });
     });
