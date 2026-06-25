@@ -13,10 +13,29 @@
 
     <header class="app-header">
         <div class="header-inner">
-            <div class="brand-mark" aria-hidden="true">S</div>
-            <div class="header-copy">
-                <h1 class="app-title">ScamCheck</h1>
-                <p class="app-tagline">Kiểm tra tin nhắn lạ — bảo vệ ông bà, bố mẹ</p>
+            <a href="#/" class="brand-home" id="brandHome" aria-label="Về trang kiểm tra chính">
+                <div class="brand-mark" aria-hidden="true">S</div>
+                <div class="header-copy">
+                    <h1 class="app-title">ScamCheck</h1>
+                    <p class="app-tagline">Kiểm tra tin nhắn lạ — bảo vệ ông bà, bố mẹ</p>
+                </div>
+            </a>
+            <div class="text-scale-control">
+                <label class="text-scale-label" for="textScaleSlider">Cỡ chữ</label>
+                <input
+                    type="range"
+                    id="textScaleSlider"
+                    class="text-scale-slider"
+                    min="100"
+                    max="200"
+                    step="10"
+                    value="100"
+                    aria-valuemin="100"
+                    aria-valuemax="200"
+                    aria-valuenow="100"
+                    aria-label="Điều chỉnh cỡ chữ từ 1x đến 2x"
+                >
+                <span id="textScaleValue" class="text-scale-value" aria-live="polite">1x</span>
             </div>
         </div>
     </header>

@@ -1,7 +1,10 @@
 const GEMINI_MODEL = "gemini-2.5-flash";
 const MAX_MESSAGE_LENGTH = 5000;
 const HISTORY_KEY = "scamcheck_history";
+const TEXT_SCALE_KEY = "scamcheck_text_scale";
 const HISTORY_LIMIT = 10;
+const TEXT_SCALE_MIN = 1;
+const TEXT_SCALE_MAX = 2;
 const SITE_URL = "https://txlocal17.github.io/ScamCheck-Cybershield-/";
 
 const RISK_CONFIG = {
@@ -47,14 +50,63 @@ const historyList = document.getElementById("historyList");
 const historyDetail = document.getElementById("historyDetail");
 const libraryList = document.getElementById("libraryList");
 const libraryDetail = document.getElementById("libraryDetail");
+const brandHome = document.getElementById("brandHome");
+const textScaleSlider = document.getElementById("textScaleSlider");
+const textScaleValue = document.getElementById("textScaleValue");
 
 init();
 
 function init() {
     bindHomeEvents();
     bindRouter();
+    bindHeaderControls();
     loadStaticData();
     navigateTo(getRouteFromHash());
+}
+
+function bindHeaderControls() {
+    brandHome?.addEventListener("click", (event) => {
+        event.preventDefault();
+        goHome();
+    });
+
+    const savedScale = parseFloat(localStorage.getItem(TEXT_SCALE_KEY));
+    applyTextScale(Number.isFinite(savedScale) ? savedScale : TEXT_SCALE_MIN);
+
+    textScaleSlider?.addEventListener("input", () => {
+        applyTextScale(parseInt(textScaleSlider.value, 10) / 100);
+    });
+}
+
+function goHome() {
+    window.location.hash = "#/";
+    navigateTo("/");
+    historyDetail.classList.add("hidden");
+    libraryDetail.classList.add("hidden");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function applyTextScale(scale) {
+    const clamped = Math.min(TEXT_SCALE_MAX, Math.max(TEXT_SCALE_MIN, scale));
+    document.documentElement.style.setProperty("--text-scale", String(clamped));
+    document.body.style.zoom = clamped;
+
+    if (!CSS.supports("zoom", "1")) {
+        document.body.style.zoom = "";
+        document.documentElement.style.fontSize = `${clamped * 100}%`;
+    }
+
+    localStorage.setItem(TEXT_SCALE_KEY, String(clamped));
+
+    if (textScaleSlider) {
+        textScaleSlider.value = String(Math.round(clamped * 100));
+        textScaleSlider.setAttribute("aria-valuenow", textScaleSlider.value);
+    }
+
+    if (textScaleValue) {
+        const label = clamped % 1 === 0 ? `${clamped}x` : `${clamped.toFixed(1)}x`;
+        textScaleValue.textContent = label;
+    }
 }
 
 function bindHomeEvents() {

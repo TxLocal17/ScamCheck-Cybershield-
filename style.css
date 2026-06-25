@@ -37,6 +37,7 @@
 
 html {
     scroll-behavior: smooth;
+    --text-scale: 1;
 }
 
 body {
@@ -97,7 +98,80 @@ body::after {
     padding: 14px 20px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 14px;
+    flex-wrap: wrap;
+}
+
+.brand-home {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    flex: 1 1 200px;
+    text-decoration: none;
+    color: inherit;
+    border-radius: var(--radius);
+    transition: opacity var(--transition), transform var(--transition);
+}
+
+.brand-home:hover {
+    opacity: 0.88;
+}
+
+.brand-home:active {
+    transform: scale(0.98);
+}
+
+.brand-home:focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 3px;
+}
+
+.text-scale-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 1 auto;
+    padding: 8px 12px;
+    background: #f1f5f9;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+}
+
+.text-scale-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.text-scale-slider {
+    width: 88px;
+    height: 6px;
+    margin: 0;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.text-scale-value {
+    min-width: 2.5em;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--primary);
+    text-align: right;
+}
+
+@media (max-width: 480px) {
+    .text-scale-control {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .text-scale-slider {
+        flex: 1;
+        max-width: 160px;
+    }
 }
 
 .brand-mark {
