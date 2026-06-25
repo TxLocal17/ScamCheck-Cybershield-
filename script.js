@@ -500,13 +500,23 @@ function renderFullResult(data, options = {}) {
         `;
     }
 
-    const actions = Array.isArray(detective.actions) ? detective.actions.slice(0, 3) : [];
+    const actionsRaw = Array.isArray(detective.actions) ? detective.actions.map((a) => String(a).trim()).filter(Boolean) : [];
+    const defaultActions = [
+        "Không bấm link trong tin lạ",
+        "Gọi tổng đài ngân hàng in trên thẻ để xác nhận",
+        "Hỏi con cháu hoặc hàng xóm tin cậy"
+    ];
+    const actions = [...actionsRaw];
+    while (actions.length < 3) {
+        actions.push(defaultActions[actions.length] || defaultActions[defaultActions.length - 1]);
+    }
+    const actionsDisplay = actions.slice(0, 3);
     let actionsHtml = "";
     if (actions.length > 0) {
         actionsHtml = `
             <div class="character-panel character-actions">
                 ${buildSectionHeading("✅", "Nên làm gì tiếp theo")}
-                <ul class="actions-list">${actions.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
+                <ul class="actions-list">${actionsDisplay.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
             </div>
         `;
     }

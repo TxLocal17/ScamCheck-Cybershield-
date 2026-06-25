@@ -29,6 +29,8 @@
     --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.1);
     --shadow-primary: 0 10px 24px rgba(37, 99, 235, 0.22);
     --transition: 0.25s ease;
+    --text-base: 18px;
+    --text-sm: 16px;
 }
 
 * {
@@ -45,7 +47,7 @@ body {
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background: var(--bg);
     color: var(--text);
-    font-size: 17px;
+    font-size: var(--text-base);
     line-height: 1.6;
     padding-bottom: 96px;
     -webkit-font-smoothing: antialiased;
@@ -140,7 +142,7 @@ body::after {
 }
 
 .text-scale-label {
-    font-size: 13px;
+    font-size: var(--text-sm);
     font-weight: 700;
     color: var(--text-muted);
     white-space: nowrap;
@@ -186,7 +188,7 @@ body::after {
 .text-scale-value {
     min-width: 3em;
     padding: 0 4px;
-    font-size: 14px;
+    font-size: var(--text-sm);
     font-weight: 800;
     color: var(--primary);
     text-align: center;
@@ -229,7 +231,7 @@ body::after {
 
 .app-tagline {
     margin: 2px 0 0;
-    font-size: 14px;
+    font-size: var(--text-sm);
     color: var(--text-muted);
     line-height: 1.4;
 }
@@ -260,7 +262,7 @@ body::after {
     align-items: center;
     gap: 3px;
     padding: 8px 4px;
-    font-size: 11px;
+    font-size: var(--text-sm);
     font-weight: 700;
     color: var(--text-muted);
     text-decoration: none;
@@ -270,13 +272,13 @@ body::after {
 }
 
 .nav-icon {
-    font-size: 18px;
+    font-size: 20px;
     line-height: 1;
 }
 
 @media (min-width: 400px) {
     .nav-link {
-        font-size: 12px;
+        font-size: var(--text-sm);
         padding: 10px 6px;
         gap: 4px;
     }
@@ -330,7 +332,7 @@ body::after {
     background: var(--primary-light);
     color: var(--primary);
     border-radius: 999px;
-    font-size: 11px;
+    font-size: var(--text-sm);
     font-weight: 800;
     letter-spacing: 0.06em;
     width: fit-content;
@@ -379,7 +381,7 @@ body::after {
 }
 
 .subtitle {
-    font-size: 16px;
+    font-size: var(--text-base);
     line-height: 1.55;
     text-align: center;
     color: var(--text-muted);
@@ -397,7 +399,7 @@ body::after {
 
 .sample-label {
     margin: 0 0 12px;
-    font-size: 14px;
+    font-size: var(--text-sm);
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -420,7 +422,7 @@ body::after {
     width: 100%;
     margin: 0;
     padding: 16px;
-    font-size: 15px;
+    font-size: var(--text-base);
     font-weight: 600;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
@@ -458,7 +460,7 @@ body::after {
 }
 
 .sample-tag {
-    font-size: 13px;
+    font-size: var(--text-sm);
     font-weight: 800;
 }
 
@@ -467,7 +469,7 @@ body::after {
 .sample-tag-prize { color: var(--secondary); }
 
 .sample-desc {
-    font-size: 13px;
+    font-size: var(--text-sm);
     color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
@@ -493,7 +495,7 @@ body::after {
 .input-label {
     display: block;
     margin-bottom: 10px;
-    font-size: 14px;
+    font-size: var(--text-sm);
     font-weight: 700;
     color: var(--text);
 }
@@ -519,7 +521,7 @@ textarea::placeholder {
 
 .char-count {
     margin: 10px 0 0;
-    font-size: 13px;
+    font-size: var(--text-sm);
     color: var(--text-muted);
     text-align: right;
 }
@@ -559,7 +561,7 @@ button.btn-primary {
     margin-top: 12px;
     padding: 14px 18px;
     font-family: inherit;
-    font-size: 16px;
+    font-size: var(--text-base);
     font-weight: 700;
     border: 2px solid var(--border);
     border-radius: var(--radius-lg);
@@ -603,7 +605,7 @@ button:active:not(:disabled) {
     border: 2px dashed var(--border);
     color: var(--text-muted);
     text-align: center;
-    font-size: 16px;
+    font-size: var(--text-base);
 }
 
 .result-loading,
@@ -684,7 +686,7 @@ button:active:not(:disabled) {
 .loading-subtext {
     margin: 0;
     color: var(--text-muted);
-    font-size: 16px;
+    font-size: var(--text-base);
 }
 
 /* ── Risk card ── */
@@ -800,7 +802,7 @@ button:active:not(:disabled) {
     border-radius: var(--radius);
     background: var(--warning-bg);
     border-left: 4px solid var(--warning);
-    font-size: 17px;
+    font-size: var(--text-base);
     line-height: 1.6;
     white-space: pre-wrap;
     word-break: break-word;
@@ -839,7 +841,7 @@ mark.highlight {
 
 .sign-number {
     margin: 0 0 8px;
-    font-size: 11px;
+    font-size: var(--text-sm);
     font-weight: 800;
     color: var(--warning);
     text-transform: uppercase;
@@ -849,7 +851,7 @@ mark.highlight {
 .sign-phrase {
     margin: 0 0 10px;
     padding: 12px 14px;
-    font-size: 17px;
+    font-size: var(--text-base);
     font-weight: 800;
     line-height: 1.45;
     border-radius: var(--radius-sm);
@@ -859,7 +861,7 @@ mark.highlight {
 
 .sign-reason {
     margin: 0;
-    font-size: 15px;
+    font-size: var(--text-base);
     line-height: 1.55;
     color: var(--text-muted);
 }
@@ -870,7 +872,7 @@ mark.highlight {
     border-radius: var(--radius);
     background: var(--safe-bg);
     border: 1px solid var(--safe-border);
-    font-size: 17px;
+    font-size: var(--text-base);
     text-align: center;
     color: #15803d;
     font-weight: 600;
@@ -878,7 +880,7 @@ mark.highlight {
 
 .psychologist-text {
     margin: 0;
-    font-size: 17px;
+    font-size: var(--text-base);
     line-height: 1.65;
     color: var(--text);
 }
@@ -893,7 +895,7 @@ mark.highlight {
     position: relative;
     margin-bottom: 10px;
     padding-left: 28px;
-    font-size: 16px;
+    font-size: var(--text-base);
     line-height: 1.55;
 }
 
@@ -930,7 +932,7 @@ mark.highlight {
     margin: 0;
     padding: 16px 14px;
     font-family: inherit;
-    font-size: 16px;
+    font-size: var(--text-base);
     font-weight: 700;
     border: 2px solid var(--danger-border);
     border-radius: var(--radius-lg);
@@ -963,7 +965,7 @@ mark.highlight {
 
 .praise-text {
     margin: 0;
-    font-size: 17px;
+    font-size: var(--text-base);
     color: var(--safe);
     font-weight: 800;
 }
@@ -982,7 +984,7 @@ mark.highlight {
 
 .rescuer-step {
     margin-bottom: 14px;
-    font-size: 16px;
+    font-size: var(--text-base);
     line-height: 1.55;
 }
 
@@ -990,7 +992,7 @@ mark.highlight {
     margin: 6px 0;
     font-weight: 800;
     color: var(--primary);
-    font-size: 17px;
+    font-size: var(--text-base);
 }
 
 .rescuer-script {
@@ -1060,7 +1062,7 @@ mark.highlight {
     background: var(--surface);
     cursor: pointer;
     font-family: inherit;
-    font-size: 16px;
+    font-size: var(--text-base);
     box-shadow: var(--shadow-sm);
     transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
 }
@@ -1076,7 +1078,7 @@ mark.highlight {
     display: inline-block;
     padding: 4px 10px;
     border-radius: 999px;
-    font-size: 11px;
+    font-size: var(--text-sm);
     font-weight: 800;
     letter-spacing: 0.04em;
     margin-bottom: 8px;
@@ -1103,7 +1105,7 @@ mark.highlight {
 .history-preview {
     display: block;
     color: var(--text);
-    font-size: 16px;
+    font-size: var(--text-base);
     font-weight: 600;
     line-height: 1.45;
 }
@@ -1111,7 +1113,7 @@ mark.highlight {
 .history-date {
     display: block;
     margin-top: 8px;
-    font-size: 12px;
+    font-size: var(--text-sm);
     font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -1140,7 +1142,7 @@ mark.highlight {
     margin: 0;
     padding: 10px 16px;
     font-family: inherit;
-    font-size: 14px;
+    font-size: var(--text-sm);
     font-weight: 700;
     border: none;
     border-radius: var(--radius);
@@ -1166,7 +1168,7 @@ mark.highlight {
     display: inline-block;
     padding: 4px 10px;
     border-radius: 999px;
-    font-size: 11px;
+    font-size: var(--text-sm);
     font-weight: 800;
     letter-spacing: 0.03em;
     margin-bottom: 8px;
@@ -1179,7 +1181,7 @@ mark.highlight {
 
 .library-name {
     display: block;
-    font-size: 17px;
+    font-size: var(--text-base);
     font-weight: 700;
     color: var(--text);
     line-height: 1.4;
@@ -1207,7 +1209,7 @@ mark.highlight {
     padding: 16px 18px;
     background: var(--warning-bg);
     border-radius: var(--radius);
-    font-size: 16px;
+    font-size: var(--text-base);
     border-left: 4px solid var(--warning);
     line-height: 1.55;
 }
@@ -1217,7 +1219,7 @@ mark.highlight {
     display: inline-block;
     margin-top: 16px;
     font-family: inherit;
-    font-size: 15px;
+    font-size: var(--text-base);
     color: var(--primary);
     font-weight: 700;
     text-decoration: none;
@@ -1238,7 +1240,7 @@ mark.highlight {
     text-align: center;
     color: var(--text-muted);
     padding: 36px 20px;
-    font-size: 16px;
+    font-size: var(--text-base);
     background: var(--surface);
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
@@ -1270,7 +1272,7 @@ mark.highlight {
 }
 
 .quiz-progress {
-    font-size: 13px;
+    font-size: var(--text-sm);
     font-weight: 800;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -1278,7 +1280,7 @@ mark.highlight {
 }
 
 .quiz-score {
-    font-size: 14px;
+    font-size: var(--text-sm);
     font-weight: 800;
     color: var(--primary);
     background: var(--primary-light);
@@ -1289,7 +1291,7 @@ mark.highlight {
 .quiz-message {
     margin: 0 0 24px;
     padding: 20px;
-    font-size: 17px;
+    font-size: var(--text-base);
     line-height: 1.65;
     font-style: italic;
     color: var(--text);
@@ -1355,7 +1357,7 @@ mark.highlight {
     margin-top: 20px;
     padding: 16px 18px;
     border-radius: var(--radius);
-    font-size: 16px;
+    font-size: var(--text-base);
     line-height: 1.55;
     font-weight: 600;
 }
@@ -1384,7 +1386,7 @@ mark.highlight {
     max-width: 920px;
     margin: 0 auto;
     padding: 20px 20px 12px;
-    font-size: 14px;
+    font-size: var(--text-sm);
     line-height: 1.6;
     color: var(--text-muted);
     text-align: center;
