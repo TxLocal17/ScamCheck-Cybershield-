@@ -754,50 +754,104 @@ async function generateShareCard(data) {
             throw new Error("Không tải được thư viện QR");
         }
 
-        const canvas = document.createElement("canvas");
-        canvas.width = 600;
-        canvas.height = 800;
-        const ctx = canvas.getContext("2d");
+        const canvasWidth = 600;
+        const padding = 30;
+        const contentWidth = canvasWidth - padding * 2;
+        const qrSize = 140;
         const risk = data.detective.riskLevel;
         const colors = {
             "An toàn": "#2e7d32",
             "Nghi ngờ": "#f9a825",
             "Nguy hiểm": "#d93025"
         };
-        const bg = colors[risk] || "#f9a825";
+        const headerColor = colors[risk] || "#f9a825";
+        const rawMessage = String(data.message || "").trim();
+        const displayMessage = rawMessage.length > 320 ? `${rawMessage.slice(0, 317)}...` : rawMessage;
+
+        const measureCanvas = document.createElement("canvas");
+        const measureCtx = measureCanvas.getContext("2d");
+        measureCtx.font = "18px Arial";
+        const messageLineCount = Math.min(8, countWrappedTextLines(measureCtx, displayMessage || "—", contentWidth - 20));
+        const messageHeight = Math.max(56, messageLineCount * 26 + 24);
+
+        measureCtx.font = "18px Arial";
+        const summaryLineCount = Math.min(3, countWrappedTextLines(measureCtx, data.detective.summary || "", contentWidth));
+        const summaryHeight = summaryLineCount * 26;
+
+        const signs = (data.detective.signs || []).slice(0, 2);
+        measureCtx.font = "17px Arial";
+        let signsHeight = signs.length ? 36 : 0;
+        signs.forEach((sign) => {
+            signsHeight += Math.min(2, countWrappedTextLines(measureCtx, `• ${sign.phrase}`, contentWidth)) * 24 + 8;
+        });
+
+        const canvasHeight = 120 + 40 + messageHeight + 50 + summaryHeight + signsHeight + 30 + qrSize + 60;
+
+        const canvas = document.createElement("canvas");
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        const ctx = canvas.getContext("2d");
 
         ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, 600, 800);
-        ctx.fillStyle = bg;
-        ctx.fillRect(0, 0, 600, 120);
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        ctx.fillStyle = headerColor;
+        ctx.fillRect(0, 0, canvasWidth, 120);
         ctx.fillStyle = "#ffffff";
         ctx.font = "bold 36px Arial";
         ctx.textAlign = "center";
-        ctx.fillText(risk.toUpperCase(), 300, 55);
+        ctx.fillText(risk.toUpperCase(), canvasWidth / 2, 55);
         ctx.font = "20px Arial";
-        ctx.fillText("ScamCheck", 300, 95);
+        ctx.fillText("ScamCheck", canvasWidth / 2, 95);
+
+        ctx.textAlign = "left";
+        let y = 150;
 
         ctx.fillStyle = "#111";
-        ctx.textAlign = "left";
-        ctx.font = "22px Arial";
-        wrapCanvasText(ctx, data.detective.summary || "", 30, 160, 540, 30);
-
         ctx.font = "bold 20px Arial";
-        ctx.fillText("Dấu hiệu chính:", 30, 280);
-        ctx.font = "18px Arial";
-        let y = 315;
-        (data.detective.signs || []).slice(0, 3).forEach((sign) => {
-            wrapCanvasText(ctx, `• ${sign.phrase}`, 30, y, 540, 26);
-            y += 55;
-        });
+        ctx.fillText("Tin nhắn gốc:", padding, y);
+        y += 30;
 
+        ctx.fillStyle = "#f4f6f8";
+        ctx.fillRect(padding - 5, y - 6, contentWidth + 10, messageHeight);
+        ctx.strokeStyle = "#dde3ea";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(padding - 5, y - 6, contentWidth + 10, messageHeight);
+
+        ctx.fillStyle = "#1a1a1a";
+        ctx.font = "18px Arial";
+        y = wrapCanvasText(ctx, displayMessage || "—", padding + 8, y + 18, contentWidth - 16, 26, 8);
+        y += 36;
+
+        ctx.fillStyle = "#111";
+        ctx.font = "bold 20px Arial";
+        ctx.fillText("Kết luận:", padding, y);
+        y += 28;
+        ctx.font = "18px Arial";
+        y = wrapCanvasText(ctx, data.detective.summary || "", padding, y, contentWidth, 26, 3);
+        y += 16;
+
+        if (signs.length) {
+            ctx.font = "bold 20px Arial";
+            ctx.fillText("Dấu hiệu chính:", padding, y);
+            y += 28;
+            ctx.font = "17px Arial";
+            signs.forEach((sign) => {
+                y = wrapCanvasText(ctx, `• ${sign.phrase}`, padding, y, contentWidth, 24, 2);
+                y += 8;
+            });
+        }
+
+        y += 24;
+        const qrX = (canvasWidth - qrSize) / 2;
         const qrCanvas = document.createElement("canvas");
-        await QRCode.toCanvas(qrCanvas, SITE_URL, { width: 140, margin: 1 });
-        ctx.drawImage(qrCanvas, 230, 620, 140, 140);
+        await QRCode.toCanvas(qrCanvas, SITE_URL, { width: qrSize, margin: 1 });
+        ctx.drawImage(qrCanvas, qrX, y, qrSize, qrSize);
+        y += qrSize + 28;
+
         ctx.font = "16px Arial";
         ctx.textAlign = "center";
         ctx.fillStyle = "#555";
-        ctx.fillText("Quét mã để dùng ScamCheck", 300, 780);
+        ctx.fillText("Quét mã để dùng ScamCheck", canvasWidth / 2, y);
 
         const dataUrl = canvas.toDataURL("image/png");
         preview.innerHTML = `
@@ -810,20 +864,58 @@ async function generateShareCard(data) {
     }
 }
 
-function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
-    const words = text.split(" ");
+function countWrappedTextLines(ctx, text, maxWidth, maxLines = Infinity) {
+    const words = String(text || "").split(/\s+/).filter(Boolean);
+    if (!words.length) return 1;
+
     let line = "";
+    let lines = 0;
     for (const word of words) {
-        const test = line + word + " ";
+        const test = line ? `${line} ${word}` : word;
         if (ctx.measureText(test).width > maxWidth && line) {
-            ctx.fillText(line.trim(), x, y);
-            line = word + " ";
-            y += lineHeight;
+            lines++;
+            if (lines >= maxLines) return maxLines;
+            line = word;
         } else {
             line = test;
         }
     }
-    if (line) ctx.fillText(line.trim(), x, y);
+    if (line && lines < maxLines) lines++;
+    return lines || 1;
+}
+
+function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight, maxLines = Infinity) {
+    const words = String(text || "").split(/\s+/).filter(Boolean);
+    if (!words.length) return y;
+
+    let line = "";
+    let lineCount = 0;
+
+    for (const word of words) {
+        const test = line ? `${line} ${word}` : word;
+        if (ctx.measureText(test).width > maxWidth && line) {
+            ctx.fillText(line, x, y);
+            y += lineHeight;
+            lineCount++;
+            if (lineCount >= maxLines) {
+                ctx.fillText("...", x, y);
+                return y + lineHeight;
+            }
+            line = word;
+        } else {
+            line = test;
+        }
+    }
+
+    if (line && lineCount < maxLines) {
+        ctx.fillText(line, x, y);
+        y += lineHeight;
+    } else if (line && lineCount >= maxLines) {
+        ctx.fillText("...", x, y);
+        y += lineHeight;
+    }
+
+    return y;
 }
 
 function highlightPhrasesInText(text, phrases) {
