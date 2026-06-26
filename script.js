@@ -1,5 +1,7 @@
 const GEMINI_MODEL = "gemini-2.5-flash";
 const MAX_MESSAGE_LENGTH = 5000;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_AUDIO_SECONDS = 60;
 const HISTORY_KEY = "scamcheck_history";
 const TEXT_SCALE_KEY = "scamcheck_text_scale";
 const HISTORY_LIMIT = 10;
@@ -27,6 +29,12 @@ const CRISIS_CHOICES = [
     { id: "otp", label: "Đã cung cấp mã xác thực" }
 ];
 
+const INPUT_TYPE_LABELS = {
+    text: "📝",
+    image: "📷",
+    voice: "🎤"
+};
+
 const LIBRARY_CATEGORY_CLASS = {
     "giả ngân hàng": "cat-bank",
     "giả cơ quan công an": "cat-police",
@@ -41,11 +49,19 @@ let quizState = { index: 0, score: 0, answered: false };
 let currentMessage = "";
 let lastFullResult = null;
 let libraryFilter = "all";
+let currentInputMode = "text";
+let selectedImageFile = null;
+let audioBlob = null;
+let mediaRecorder = null;
+let audioChunks = [];
+let recordingTimer = null;
+let recordingSeconds = 0;
 
 const messageInput = document.getElementById("messageInput");
 const checkButton = document.getElementById("checkButton");
 const resultBox = document.getElementById("resultBox");
 const charCount = document.getElementById("charCount");
+const viewLanding = document.getElementById("viewLanding");
 const viewHome = document.getElementById("viewHome");
 const viewHistory = document.getElementById("viewHistory");
 const viewLibrary = document.getElementById("viewLibrary");
@@ -65,11 +81,27 @@ const quizBtnFake = document.getElementById("quizBtnFake");
 const quizBtnReal = document.getElementById("quizBtnReal");
 const quizFeedback = document.getElementById("quizFeedback");
 const quizNextBtn = document.getElementById("quizNextBtn");
+const startAppBtn = document.getElementById("startAppBtn");
+const imageUploadInput = document.getElementById("imageUploadInput");
+const imagePreview = document.getElementById("imagePreview");
+const imageClearBtn = document.getElementById("imageClearBtn");
+const voiceRecordBtn = document.getElementById("voiceRecordBtn");
+const voiceRecordLabel = document.getElementById("voiceRecordLabel");
+const voiceStatus = document.getElementById("voiceStatus");
+const voicePlayback = document.getElementById("voicePlayback");
+const voiceClearBtn = document.getElementById("voiceClearBtn");
+const inputPanelText = document.getElementById("inputPanelText");
+const inputPanelImage = document.getElementById("inputPanelImage");
+const inputPanelVoice = document.getElementById("inputPanelVoice");
+const appHeader = document.querySelector(".app-header");
+const bottomNav = document.querySelector(".bottom-nav");
+const appFooter = document.querySelector(".app-footer");
 
 init();
 
 function init() {
     bindHomeEvents();
+    bindInputModeEvents();
     bindRouter();
     bindHeaderControls();
     bindQuizEvents();
@@ -100,12 +132,22 @@ function formatTextScaleLabel(scale) {
     return scale % 1 === 0 ? `${scale}x` : `${scale.toFixed(1)}x`;
 }
 
-function goHome() {
-    updateUrlForRoute("/");
-    navigateTo("/");
+function goToCheck() {
+    updateUrlForRoute("/check");
+    navigateTo("/check");
     historyDetail.classList.add("hidden");
     libraryDetail.classList.add("hidden");
     window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function goToLanding() {
+    updateUrlForRoute("/");
+    navigateTo("/");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function goHome() {
+    goToCheck();
 }
 
 function scrollToPanel(element) {
@@ -158,11 +200,13 @@ function bindHomeEvents() {
     checkButton.addEventListener("click", runCheck);
     messageInput.addEventListener("input", updateCharCount);
     updateCharCount();
+    startAppBtn?.addEventListener("click", goToCheck);
 
     document.querySelectorAll(".sample-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
             const key = btn.dataset.sample;
             if (SAMPLE_MESSAGES[key]) {
+                setInputMode("text");
                 messageInput.value = SAMPLE_MESSAGES[key];
                 updateCharCount();
                 messageInput.focus();
@@ -180,6 +224,159 @@ function bindHomeEvents() {
     });
 }
 
+function bindInputModeEvents() {
+    document.querySelectorAll(".input-mode-btn").forEach((btn) => {
+        btn.addEventListener("click", () => setInputMode(btn.dataset.mode));
+    });
+
+    imageUploadInput?.addEventListener("change", handleImageSelected);
+    imageClearBtn?.addEventListener("click", clearSelectedImage);
+    voiceRecordBtn?.addEventListener("click", toggleVoiceRecording);
+    voiceClearBtn?.addEventListener("click", clearVoiceRecording);
+}
+
+function setInputMode(mode) {
+    if (!["text", "image", "voice"].includes(mode)) return;
+    currentInputMode = mode;
+
+    document.querySelectorAll(".input-mode-btn").forEach((btn) => {
+        const active = btn.dataset.mode === mode;
+        btn.classList.toggle("active", active);
+        btn.setAttribute("aria-selected", active ? "true" : "false");
+    });
+
+    inputPanelText?.classList.toggle("hidden", mode !== "text");
+    inputPanelImage?.classList.toggle("hidden", mode !== "image");
+    inputPanelVoice?.classList.toggle("hidden", mode !== "voice");
+    document.querySelector(".sample-buttons")?.classList.toggle("hidden", mode !== "text");
+}
+
+function handleImageSelected(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+        showError("Vui lòng chọn file ảnh (JPG, PNG, WEBP).");
+        imageUploadInput.value = "";
+        return;
+    }
+
+    if (file.size > MAX_IMAGE_BYTES) {
+        showError("Ảnh quá lớn. Vui lòng chọn ảnh dưới 5 MB.");
+        imageUploadInput.value = "";
+        return;
+    }
+
+    selectedImageFile = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+        imagePreview.innerHTML = `<img src="${reader.result}" alt="Ảnh tin nhắn đã chọn">`;
+        imagePreview.classList.remove("hidden");
+        imageClearBtn?.classList.remove("hidden");
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearSelectedImage() {
+    selectedImageFile = null;
+    if (imageUploadInput) imageUploadInput.value = "";
+    imagePreview?.classList.add("hidden");
+    imagePreview.innerHTML = "";
+    imageClearBtn?.classList.add("hidden");
+}
+
+async function toggleVoiceRecording() {
+    if (mediaRecorder?.state === "recording") {
+        stopVoiceRecording();
+        return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+        showError("Trình duyệt không hỗ trợ ghi âm. Bác thử dùng văn bản hoặc ảnh nhé.");
+        return;
+    }
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) audioChunks.push(event.data);
+        };
+        mediaRecorder.onstop = () => {
+            stream.getTracks().forEach((track) => track.stop());
+            audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+            const url = URL.createObjectURL(audioBlob);
+            voicePlayback.src = url;
+            voicePlayback.classList.remove("hidden");
+            voiceClearBtn?.classList.remove("hidden");
+            voiceStatus.textContent = `Đã ghi ${recordingSeconds} giây. Bác nghe lại rồi bấm Kiểm tra nhé.`;
+            resetRecordingUi(false);
+        };
+
+        mediaRecorder.start();
+        recordingSeconds = 0;
+        voiceRecordBtn.classList.add("recording");
+        voiceRecordBtn.setAttribute("aria-pressed", "true");
+        voiceRecordLabel.textContent = "Dừng ghi âm";
+        voiceStatus.textContent = "Đang ghi... 0 giây";
+
+        recordingTimer = window.setInterval(() => {
+            recordingSeconds += 1;
+            voiceStatus.textContent = `Đang ghi... ${recordingSeconds} giây`;
+            if (recordingSeconds >= MAX_AUDIO_SECONDS) stopVoiceRecording();
+        }, 1000);
+    } catch (error) {
+        console.error(error);
+        showError("Không truy cập được micro. Bác kiểm tra quyền micro rồi thử lại.");
+        resetRecordingUi(true);
+    }
+}
+
+function stopVoiceRecording() {
+    if (mediaRecorder?.state === "recording") {
+        mediaRecorder.stop();
+    }
+    if (recordingTimer) {
+        clearInterval(recordingTimer);
+        recordingTimer = null;
+    }
+}
+
+function resetRecordingUi(clearBlob) {
+    voiceRecordBtn?.classList.remove("recording");
+    voiceRecordBtn?.setAttribute("aria-pressed", "false");
+    if (voiceRecordLabel) voiceRecordLabel.textContent = "Nhấn để ghi âm";
+    if (clearBlob) {
+        audioBlob = null;
+        if (voicePlayback) {
+            voicePlayback.pause();
+            voicePlayback.removeAttribute("src");
+            voicePlayback.classList.add("hidden");
+        }
+        voiceClearBtn?.classList.add("hidden");
+        if (voiceStatus) voiceStatus.textContent = "Chưa có bản ghi";
+    }
+}
+
+function clearVoiceRecording() {
+    stopVoiceRecording();
+    resetRecordingUi(true);
+}
+
+function readBlobAsBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const result = String(reader.result || "");
+            const base64 = result.includes(",") ? result.split(",")[1] : result;
+            resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
 function bindRouter() {
     window.addEventListener("hashchange", () => navigateTo(getRouteFromHash()));
     window.addEventListener("popstate", () => navigateTo(getRouteFromHash()));
@@ -188,19 +385,22 @@ function bindRouter() {
         link.addEventListener("click", (event) => {
             event.preventDefault();
             const route = link.dataset.route || "/";
-            if (route === "/") {
-                goHome();
-                return;
-            }
             updateUrlForRoute(route);
             navigateTo(route);
         });
     });
 
-    document.querySelectorAll(".brand-home, .back-link").forEach((link) => {
+    document.querySelectorAll(".brand-home").forEach((link) => {
         link.addEventListener("click", (event) => {
             event.preventDefault();
-            goHome();
+            goToLanding();
+        });
+    });
+
+    document.querySelectorAll(".back-link").forEach((link) => {
+        link.addEventListener("click", (event) => {
+            event.preventDefault();
+            goToCheck();
         });
     });
 }
@@ -224,6 +424,7 @@ function normalizeHomeHash() {
 function getRouteFromHash() {
     const hash = window.location.hash.replace(/^#/, "");
     if (!hash || hash === "/") return "/";
+    if (hash.startsWith("/check") || hash === "check") return "/check";
     if (hash.startsWith("/history") || hash === "history") return "/history";
     if (hash.startsWith("/library") || hash === "library") return "/library";
     if (hash.startsWith("/quiz") || hash === "quiz") return "/quiz";
@@ -231,10 +432,17 @@ function getRouteFromHash() {
 }
 
 function navigateTo(route) {
-    viewHome.classList.toggle("hidden", route !== "/");
+    const isLanding = route === "/";
+    viewLanding?.classList.toggle("hidden", !isLanding);
+    viewHome.classList.toggle("hidden", route !== "/check");
     viewHistory.classList.toggle("hidden", route !== "/history");
     viewLibrary.classList.toggle("hidden", route !== "/library");
     viewQuiz.classList.toggle("hidden", route !== "/quiz");
+
+    appHeader?.classList.toggle("hidden", isLanding);
+    bottomNav?.classList.toggle("hidden", isLanding);
+    appFooter?.classList.toggle("hidden", isLanding);
+    document.body.classList.toggle("landing-active", isLanding);
 
     document.querySelectorAll(".nav-link").forEach((link) => {
         link.classList.toggle("active", link.dataset.route === route);
@@ -366,27 +574,62 @@ function updateCharCount() {
 }
 
 async function runCheck() {
-    const message = messageInput.value.trim();
+    const inputType = currentInputMode;
+    let message = "";
+    const mediaParts = [];
 
-    if (!message) {
-        showError("Vui lòng nhập tin nhắn.");
-        return;
+    if (inputType === "text") {
+        message = messageInput.value.trim();
+        if (!message) {
+            showError("Vui lòng nhập tin nhắn.");
+            return;
+        }
+        if (message.length > MAX_MESSAGE_LENGTH) {
+            showError(`Tin nhắn quá dài. Vui lòng rút gọn dưới ${MAX_MESSAGE_LENGTH} ký tự.`);
+            return;
+        }
+    } else if (inputType === "image") {
+        if (!selectedImageFile) {
+            showError("Vui lòng chọn ảnh tin nhắn trước khi kiểm tra.");
+            return;
+        }
+        const base64 = await readBlobAsBase64(selectedImageFile);
+        mediaParts.push({ mimeType: selectedImageFile.type || "image/jpeg", base64 });
+    } else if (inputType === "voice") {
+        if (!audioBlob) {
+            showError("Vui lòng ghi âm tin nhắn trước khi kiểm tra.");
+            return;
+        }
+        const base64 = await readBlobAsBase64(audioBlob);
+        mediaParts.push({ mimeType: audioBlob.type || "audio/webm", base64 });
     }
 
-    if (message.length > MAX_MESSAGE_LENGTH) {
-        showError(`Tin nhắn quá dài. Vui lòng rút gọn dưới ${MAX_MESSAGE_LENGTH} ký tự.`);
-        return;
-    }
+    const loadingMessages = {
+        text: "🔍 Thám tử đang phân tích tin nhắn...",
+        image: "🔍 Thám tử đang đọc ảnh và phân tích...",
+        voice: "🔍 Thám tử đang nghe và phân tích..."
+    };
 
-    currentMessage = message;
     checkButton.disabled = true;
-    showLoading("🔍 Thám tử đang phân tích tin nhắn...");
+    showLoading(loadingMessages[inputType] || loadingMessages.text);
     lastFullResult = null;
 
     try {
-        const detectiveRaw = await callGemini(buildDetectivePrompt(message));
+        const detectiveRaw = await callGemini(buildDetectivePrompt(inputType, message), mediaParts);
         const detective = parseDetectiveResult(detectiveRaw);
 
+        if (inputType !== "text") {
+            message = detective.extractedMessage || "";
+            if (!message.trim()) {
+                showError("Không đọc được nội dung từ ảnh hoặc ghi âm. Bác thử lại hoặc nhập tay nhé.");
+                return;
+            }
+            if (message.length > MAX_MESSAGE_LENGTH) {
+                message = message.slice(0, MAX_MESSAGE_LENGTH);
+            }
+        }
+
+        currentMessage = message;
         let psychologist = null;
         let psychologistError = null;
 
@@ -400,7 +643,7 @@ async function runCheck() {
             }
         }
 
-        lastFullResult = { detective, psychologist, psychologistError, message };
+        lastFullResult = { detective, psychologist, psychologistError, message, inputType };
         saveToHistory(lastFullResult);
         renderFullResult(lastFullResult);
     } catch (error) {
@@ -963,6 +1206,7 @@ function saveToHistory(data) {
     const entry = {
         id: Date.now(),
         message: data.message,
+        inputType: data.inputType || "text",
         detective: data.detective,
         psychologist: data.psychologist,
         psychologistError: data.psychologistError,
@@ -994,10 +1238,11 @@ function renderHistoryList() {
         const risk = RISK_CONFIG[item.detective?.riskLevel] || RISK_CONFIG["Nghi ngờ"];
         const preview = item.message.slice(0, 60) + (item.message.length > 60 ? "..." : "");
         const date = new Date(item.savedAt).toLocaleString("vi-VN");
+        const typeLabel = INPUT_TYPE_LABELS[item.inputType] || INPUT_TYPE_LABELS.text;
         return `
             <button type="button" class="history-item" data-id="${item.id}">
                 <span class="history-risk ${risk.className}">${risk.label}</span>
-                <span class="history-preview">${escapeHtml(preview)}</span>
+                <span class="history-preview"><span class="history-input-type" aria-hidden="true">${typeLabel}</span>${escapeHtml(preview)}</span>
                 <span class="history-date">${escapeHtml(date)}</span>
             </button>
         `;
@@ -1089,6 +1334,7 @@ function parseDetectiveResult(rawText) {
         return {
             riskLevel,
             summary: String(parsed.summary || RISK_CONFIG[riskLevel].hint),
+            extractedMessage: String(parsed.extractedMessage || "").trim(),
             signs: (parsed.signs || [])
                 .filter((s) => s && (s.phrase || s.reason))
                 .map((s) => ({
@@ -1160,7 +1406,7 @@ function getApiKey() {
     return "";
 }
 
-async function callGemini(promptText) {
+async function callGemini(promptText, mediaParts = []) {
     if (window.location.protocol === "file:") {
         throw new Error("Bi chan CORS");
     }
@@ -1170,7 +1416,17 @@ async function callGemini(promptText) {
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
+    const timeoutId = setTimeout(() => controller.abort(), 35000);
+
+    const parts = [{ text: promptText }];
+    mediaParts.forEach((media) => {
+        parts.push({
+            inline_data: {
+                mime_type: media.mimeType,
+                data: media.base64
+            }
+        });
+    });
 
     let response;
     try {
@@ -1182,7 +1438,7 @@ async function callGemini(promptText) {
             },
             signal: controller.signal,
             body: JSON.stringify({
-                contents: [{ parts: [{ text: promptText }] }],
+                contents: [{ parts }],
                 generationConfig: { responseMimeType: "application/json" }
             })
         });
@@ -1212,12 +1468,8 @@ async function callGemini(promptText) {
     return text;
 }
 
-function buildDetectivePrompt(message) {
-    return `Bạn là Thám tử phân tích tin nhắn lừa đảo. Giọng khô khan, lý tính. Phân tích tin sau và trả về ĐÚNG định dạng JSON, không thêm chữ nào khác:
-
-"${message}"
-
-JSON bắt buộc:
+function buildDetectivePrompt(inputType, message = "") {
+    const jsonSchema = `JSON bắt buộc:
 {
   "riskLevel": "An toàn" hoặc "Nghi ngờ" hoặc "Nguy hiểm",
   "summary": "một câu tóm tắt dễ hiểu cho người lớn tuổi",
@@ -1231,6 +1483,32 @@ Quy tắc:
 - Nếu An toàn thì signs = []
 - actions: đúng 3 việc cụ thể
 - Tiếng Việt`;
+
+    if (inputType === "image") {
+        return `Bạn là Thám tử phân tích tin nhắn lừa đảo. Giọng khô khan, lý tính.
+Ảnh đính kèm là screenshot tin nhắn (SMS, Zalo, ngân hàng, v.v.).
+Hãy đọc toàn bộ nội dung tin nhắn trong ảnh, rồi phân tích mức rủi ro lừa đảo.
+
+Trả về ĐÚNG định dạng JSON, không thêm chữ nào khác. Thêm trường "extractedMessage" chứa nội dung tin nhắn đọc được từ ảnh.
+
+${jsonSchema}`;
+    }
+
+    if (inputType === "voice") {
+        return `Bạn là Thám tử phân tích tin nhắn lừa đảo. Giọng khô khan, lý tính.
+File âm thanh đính kèm: người dùng đọc to hoặc mô tả tin nhắn nghi ngờ.
+Hãy chép lại nội dung tin nhắn từ giọng nói, rồi phân tích mức rủi ro lừa đảo.
+
+Trả về ĐÚNG định dạng JSON, không thêm chữ nào khác. Thêm trường "extractedMessage" chứa nội dung tin nhắn nghe được.
+
+${jsonSchema}`;
+    }
+
+    return `Bạn là Thám tử phân tích tin nhắn lừa đảo. Giọng khô khan, lý tính. Phân tích tin sau và trả về ĐÚNG định dạng JSON, không thêm chữ nào khác:
+
+"${message}"
+
+${jsonSchema}`;
 }
 
 function buildPsychologistPrompt(message, detective) {

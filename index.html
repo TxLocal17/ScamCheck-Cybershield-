@@ -32,14 +32,40 @@
     </header>
 
     <main class="container">
+        <!-- Trang chào mừng -->
+        <section id="viewLanding" class="view landing-page">
+            <div class="landing-inner">
+                <div class="landing-glow landing-glow-a" aria-hidden="true"></div>
+                <div class="landing-glow landing-glow-b" aria-hidden="true"></div>
+                <div class="landing-logo">
+                    <div class="landing-mark" aria-hidden="true">S</div>
+                    <h1 class="landing-title">ScamCheck</h1>
+                </div>
+                <p class="landing-tagline">Kiểm tra tin nhắn lạ — bảo vệ ông bà, bố mẹ khỏi lừa đảo</p>
+                <ul class="landing-features" aria-label="Cách kiểm tra">
+                    <li><span class="landing-feature-icon" aria-hidden="true">📝</span> Dán văn bản</li>
+                    <li><span class="landing-feature-icon" aria-hidden="true">📷</span> Tải ảnh chụp</li>
+                    <li><span class="landing-feature-icon" aria-hidden="true">🎤</span> Ghi âm giọng nói</li>
+                </ul>
+                <button type="button" id="startAppBtn" class="landing-start-btn">Bắt đầu</button>
+                <p class="landing-note">Miễn phí · Tiếng Việt · Hỗ trợ bởi AI</p>
+            </div>
+        </section>
+
         <!-- Trang kiểm tra -->
-        <section id="viewHome" class="view">
+        <section id="viewHome" class="view hidden">
             <div class="home-badge">
                 <span class="pulse-dot" aria-hidden="true"></span>
                 AI SECURITY FOR VIETNAM
             </div>
             <h2 class="home-heading">Phân tích tin nhắn nghi ngờ</h2>
-            <p class="subtitle">Dán nội dung tin nhắn bạn nghi ngờ vào ô bên dưới, rồi bấm Kiểm tra.</p>
+            <p class="subtitle">Chọn cách gửi tin: dán chữ, tải ảnh chụp màn hình, hoặc ghi âm đọc tin.</p>
+
+            <div class="input-mode-tabs" role="tablist" aria-label="Chọn loại nội dung">
+                <button type="button" class="input-mode-btn active" data-mode="text" role="tab" aria-selected="true">📝 Văn bản</button>
+                <button type="button" class="input-mode-btn" data-mode="image" role="tab" aria-selected="false">📷 Ảnh</button>
+                <button type="button" class="input-mode-btn" data-mode="voice" role="tab" aria-selected="false">🎤 Giọng nói</button>
+            </div>
 
             <div class="sample-buttons" role="group" aria-label="Tin mẫu thử nhanh">
                 <p class="sample-label">Thử nhanh (không tốn công tìm tin):</p>
@@ -68,14 +94,42 @@
                 </div>
             </div>
 
-            <div class="input-panel">
-                <label class="input-label" for="messageInput">Nội dung tin nhắn</label>
-                <textarea
-                    id="messageInput"
-                    maxlength="5000"
-                    placeholder="Dán nội dung tin nhắn nghi ngờ vào đây..."
-                ></textarea>
-                <p id="charCount" class="char-count">0 / 5000 ký tự</p>
+            <div id="inputPanelText" class="input-mode-panel">
+                <div class="input-panel">
+                    <label class="input-label" for="messageInput">Nội dung tin nhắn</label>
+                    <textarea
+                        id="messageInput"
+                        maxlength="5000"
+                        placeholder="Dán nội dung tin nhắn nghi ngờ vào đây..."
+                    ></textarea>
+                    <p id="charCount" class="char-count">0 / 5000 ký tự</p>
+                </div>
+            </div>
+
+            <div id="inputPanelImage" class="input-mode-panel hidden">
+                <div class="input-panel upload-panel">
+                    <label class="upload-dropzone" for="imageUploadInput">
+                        <input type="file" id="imageUploadInput" accept="image/jpeg,image/png,image/webp,image/gif" capture="environment" hidden>
+                        <span class="upload-icon" aria-hidden="true">📷</span>
+                        <span class="upload-title">Chọn hoặc chụp ảnh tin nhắn</span>
+                        <span class="upload-hint">Ảnh chụp màn hình SMS, Zalo, Messenger... (tối đa 5 MB)</span>
+                    </label>
+                    <div id="imagePreview" class="image-preview hidden"></div>
+                    <button type="button" id="imageClearBtn" class="secondary-btn upload-clear-btn hidden">Chọn ảnh khác</button>
+                </div>
+            </div>
+
+            <div id="inputPanelVoice" class="input-mode-panel hidden">
+                <div class="input-panel voice-panel">
+                    <p class="voice-intro">Bấm nút bên dưới và đọc to nội dung tin nhắn nghi ngờ (tối đa 60 giây).</p>
+                    <button type="button" id="voiceRecordBtn" class="voice-record-btn" aria-pressed="false">
+                        <span class="voice-record-icon" aria-hidden="true">🎤</span>
+                        <span id="voiceRecordLabel">Nhấn để ghi âm</span>
+                    </button>
+                    <p id="voiceStatus" class="voice-status">Chưa có bản ghi</p>
+                    <audio id="voicePlayback" class="voice-playback hidden" controls></audio>
+                    <button type="button" id="voiceClearBtn" class="secondary-btn upload-clear-btn hidden">Ghi lại</button>
+                </div>
             </div>
 
             <button id="checkButton" type="button" class="btn-primary">⚡ Kiểm tra ngay</button>
@@ -106,7 +160,7 @@
             </div>
             <div id="libraryList" class="library-list"></div>
             <article id="libraryDetail" class="library-detail hidden"></article>
-            <a href="./" class="back-link" id="backToHome">← Quay lại kiểm tra tin</a>
+            <a href="#/check" class="back-link" id="backToHome">← Quay lại kiểm tra tin</a>
         </section>
 
         <!-- Trang luyện tập -->
@@ -134,7 +188,7 @@
     </footer>
 
     <nav class="bottom-nav" aria-label="Điều hướng chính">
-        <a href="./" class="nav-link" data-route="/">
+        <a href="#/check" class="nav-link" data-route="/check">
             <span class="nav-icon" aria-hidden="true">🔍</span>
             <span>Kiểm tra</span>
         </a>
