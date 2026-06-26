@@ -1194,6 +1194,16 @@ mark.highlight {
     background: var(--surface);
     border: 1px solid var(--border);
     box-shadow: var(--shadow-lg);
+    scroll-margin-top: 88px;
+}
+
+.history-detail {
+    margin-top: 16px;
+    scroll-margin-top: 88px;
+}
+
+.history-detail .result-box {
+    margin-top: 0;
 }
 
 .library-detail-title {

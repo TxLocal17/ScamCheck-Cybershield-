@@ -108,6 +108,11 @@ function goHome() {
     window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+function scrollToPanel(element) {
+    if (!element) return;
+    element.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function getScalableRoots() {
     return [
         document.querySelector(".container"),
@@ -921,6 +926,7 @@ function renderHistoryList() {
                 psychologist: item.psychologist,
                 psychologistError: item.psychologistError
             }, { readOnly: true, container: host });
+            scrollToPanel(host);
         });
     });
 }
@@ -961,11 +967,13 @@ function renderLibraryList() {
                 </div>
                 <button type="button" class="secondary-btn" id="tryInCheckBtn">Thử kiểm tra tin này</button>
             `;
-            document.getElementById("tryInCheckBtn").addEventListener("click", () => {
+            const tryBtn = document.getElementById("tryInCheckBtn");
+            tryBtn.addEventListener("click", () => {
                 messageInput.value = item.example;
                 updateCharCount();
                 goHome();
             });
+            scrollToPanel(tryBtn);
         });
     });
 }
