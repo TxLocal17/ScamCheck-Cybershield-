@@ -4,6 +4,7 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_AUDIO_SECONDS = 60;
 const HISTORY_KEY = "scamcheck_history";
 const TEXT_SCALE_KEY = "scamcheck_text_scale";
+const THEME_KEY = "scamcheck_theme";
 const HISTORY_LIMIT = 10;
 const TEXT_SCALE_MIN = 1;
 const TEXT_SCALE_MAX = 2;
@@ -74,6 +75,8 @@ const brandHome = document.getElementById("brandHome");
 const textScaleDown = document.getElementById("textScaleDown");
 const textScaleUp = document.getElementById("textScaleUp");
 const textScaleValue = document.getElementById("textScaleValue");
+const themeToggle = document.getElementById("themeToggle");
+const landingThemeToggle = document.getElementById("landingThemeToggle");
 const quizProgress = document.getElementById("quizProgress");
 const quizScore = document.getElementById("quizScore");
 const quizMessage = document.getElementById("quizMessage");
@@ -111,6 +114,8 @@ function init() {
 }
 
 function bindHeaderControls() {
+    initTheme();
+
     const savedScale = parseFloat(localStorage.getItem(TEXT_SCALE_KEY));
     applyTextScale(Number.isFinite(savedScale) ? savedScale : TEXT_SCALE_MIN);
 
@@ -121,6 +126,40 @@ function bindHeaderControls() {
     textScaleUp?.addEventListener("click", () => {
         applyTextScale(getCurrentTextScale() + TEXT_SCALE_STEP);
     });
+
+    themeToggle?.addEventListener("click", toggleTheme);
+    landingThemeToggle?.addEventListener("click", toggleTheme);
+}
+
+function getCurrentTheme() {
+    return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+}
+
+function initTheme() {
+    const saved = localStorage.getItem(THEME_KEY);
+    const theme = saved === "dark" || saved === "light"
+        ? saved
+        : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    applyTheme(theme);
+}
+
+function applyTheme(theme) {
+    const nextTheme = theme === "dark" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", nextTheme);
+    localStorage.setItem(THEME_KEY, nextTheme);
+
+    const isDark = nextTheme === "dark";
+    [themeToggle, landingThemeToggle].forEach((btn) => {
+        if (!btn) return;
+        btn.setAttribute("aria-pressed", isDark ? "true" : "false");
+        btn.setAttribute("aria-label", isDark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối");
+        btn.querySelector(".theme-icon-moon")?.classList.toggle("hidden", isDark);
+        btn.querySelector(".theme-icon-sun")?.classList.toggle("hidden", !isDark);
+    });
+}
+
+function toggleTheme() {
+    applyTheme(getCurrentTheme() === "dark" ? "light" : "dark");
 }
 
 function getCurrentTextScale() {

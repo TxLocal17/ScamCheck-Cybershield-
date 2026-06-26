@@ -7,6 +7,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        (function () {
+            var saved = localStorage.getItem("scamcheck_theme");
+            var theme = saved === "dark" || saved === "light"
+                ? saved
+                : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            document.documentElement.setAttribute("data-theme", theme);
+        })();
+    </script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,13 +29,19 @@
                     <p class="app-tagline">Trợ lý kiểm tra tin lừa đảo</p>
                 </div>
             </a>
-            <div class="text-scale-control">
-                <span class="text-scale-label">Chữ to/nhỏ</span>
-                <div class="text-scale-stepper" role="group" aria-label="Điều chỉnh cỡ chữ từ 1x đến 2x">
-                    <button type="button" id="textScaleDown" class="text-scale-btn" aria-label="Giảm cỡ chữ">−</button>
-                    <span id="textScaleValue" class="text-scale-value" aria-live="polite">1x</span>
-                    <button type="button" id="textScaleUp" class="text-scale-btn" aria-label="Tăng cỡ chữ">+</button>
+            <div class="header-actions">
+                <div class="text-scale-control">
+                    <span class="text-scale-label">Chữ to/nhỏ</span>
+                    <div class="text-scale-stepper" role="group" aria-label="Điều chỉnh cỡ chữ từ 1x đến 2x">
+                        <button type="button" id="textScaleDown" class="text-scale-btn" aria-label="Giảm cỡ chữ">−</button>
+                        <span id="textScaleValue" class="text-scale-value" aria-live="polite">1x</span>
+                        <button type="button" id="textScaleUp" class="text-scale-btn" aria-label="Tăng cỡ chữ">+</button>
+                    </div>
                 </div>
+                <button type="button" id="themeToggle" class="theme-toggle" aria-pressed="false" aria-label="Chuyển sang giao diện tối">
+                    <span class="theme-icon theme-icon-moon" aria-hidden="true">🌙</span>
+                    <span class="theme-icon theme-icon-sun hidden" aria-hidden="true">☀️</span>
+                </button>
             </div>
         </div>
     </header>
@@ -53,6 +68,11 @@
                 </ol>
 
                 <button type="button" id="startAppBtn" class="landing-start-btn">Bắt đầu kiểm tra</button>
+
+                <button type="button" id="landingThemeToggle" class="landing-theme-toggle" aria-pressed="false" aria-label="Chuyển sang giao diện tối">
+                    <span class="theme-icon theme-icon-moon" aria-hidden="true">🌙</span>
+                    <span class="theme-icon theme-icon-sun hidden" aria-hidden="true">☀️</span>
+                </button>
 
                 <ul class="landing-trust" aria-label="Cam kết">
                     <li>✓ Miễn phí</li>
