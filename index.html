@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScamCheck — Bảo vệ bạn khỏi lừa đảo</title>
+    <title>ScamCheck — Kiểm tra tin lừa đảo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <header class="app-header">
         <div class="header-inner">
-            <a href="./" class="brand-home" id="brandHome" aria-label="Về trang kiểm tra chính">
-                <div class="brand-mark" aria-hidden="true">S</div>
+            <a href="./" class="brand-home" id="brandHome" aria-label="Về trang chủ ScamCheck">
+                <div class="brand-mark" aria-hidden="true">🛡</div>
                 <div class="header-copy">
                     <h1 class="app-title">ScamCheck</h1>
-                    <p class="app-tagline">Kiểm tra tin nhắn lạ — bảo vệ ông bà, bố mẹ</p>
+                    <p class="app-tagline">Trợ lý kiểm tra tin lừa đảo</p>
                 </div>
             </a>
             <div class="text-scale-control">
-                <span class="text-scale-label">Cỡ chữ</span>
+                <span class="text-scale-label">Chữ to/nhỏ</span>
                 <div class="text-scale-stepper" role="group" aria-label="Điều chỉnh cỡ chữ từ 1x đến 2x">
                     <button type="button" id="textScaleDown" class="text-scale-btn" aria-label="Giảm cỡ chữ">−</button>
                     <span id="textScaleValue" class="text-scale-value" aria-live="polite">1x</span>
@@ -37,120 +37,169 @@
             <div class="landing-inner">
                 <div class="landing-glow landing-glow-a" aria-hidden="true"></div>
                 <div class="landing-glow landing-glow-b" aria-hidden="true"></div>
+
                 <div class="landing-logo">
-                    <div class="landing-mark" aria-hidden="true">S</div>
+                    <div class="landing-mark" aria-hidden="true">🛡</div>
                     <h1 class="landing-title">ScamCheck</h1>
+                    <p class="landing-subtitle">Trợ lý kiểm tra tin lừa đảo</p>
                 </div>
-                <p class="landing-tagline">Kiểm tra tin nhắn lạ — bảo vệ ông bà, bố mẹ khỏi lừa đảo</p>
-                <ul class="landing-features" aria-label="Cách kiểm tra">
-                    <li><span class="landing-feature-icon" aria-hidden="true">📝</span> Dán văn bản</li>
-                    <li><span class="landing-feature-icon" aria-hidden="true">📷</span> Tải ảnh chụp</li>
-                    <li><span class="landing-feature-icon" aria-hidden="true">🎤</span> Ghi âm giọng nói</li>
+
+                <p class="landing-tagline">Giúp bác kiểm tra tin nhắn, ảnh chụp màn hình hoặc giọng đọc — biết ngay tin đó có an toàn không.</p>
+
+                <ol class="landing-steps" aria-label="Cách sử dụng">
+                    <li><span class="landing-step-num">1</span> Chọn cách gửi tin (chữ, ảnh hoặc ghi âm)</li>
+                    <li><span class="landing-step-num">2</span> Bấm <strong>Kiểm tra ngay</strong></li>
+                    <li><span class="landing-step-num">3</span> Đọc kết quả và làm theo hướng dẫn</li>
+                </ol>
+
+                <button type="button" id="startAppBtn" class="landing-start-btn">Bắt đầu kiểm tra</button>
+
+                <ul class="landing-trust" aria-label="Cam kết">
+                    <li>✓ Miễn phí</li>
+                    <li>✓ Tiếng Việt</li>
+                    <li>✓ Dễ dùng mọi lứa tuổi</li>
                 </ul>
-                <button type="button" id="startAppBtn" class="landing-start-btn">Bắt đầu</button>
-                <p class="landing-note">Miễn phí · Tiếng Việt · Hỗ trợ bởi AI</p>
             </div>
         </section>
 
         <!-- Trang kiểm tra -->
         <section id="viewHome" class="view hidden">
-            <div class="home-badge">
-                <span class="pulse-dot" aria-hidden="true"></span>
-                AI SECURITY FOR VIETNAM
-            </div>
-            <h2 class="home-heading">Phân tích tin nhắn nghi ngờ</h2>
-            <p class="subtitle">Chọn cách gửi tin: dán chữ, tải ảnh chụp màn hình, hoặc ghi âm đọc tin.</p>
-
-            <div class="input-mode-tabs" role="tablist" aria-label="Chọn loại nội dung">
-                <button type="button" class="input-mode-btn active" data-mode="text" role="tab" aria-selected="true">📝 Văn bản</button>
-                <button type="button" class="input-mode-btn" data-mode="image" role="tab" aria-selected="false">📷 Ảnh</button>
-                <button type="button" class="input-mode-btn" data-mode="voice" role="tab" aria-selected="false">🎤 Giọng nói</button>
+            <div class="page-hero">
+                <h2 class="page-title page-title-left">Kiểm tra tin nhắn</h2>
+                <p class="page-lead">Làm theo 3 bước bên dưới. Không cần biết tin học — cứ bấm và làm theo hướng dẫn.</p>
             </div>
 
-            <div class="sample-buttons" role="group" aria-label="Tin mẫu thử nhanh">
-                <p class="sample-label">Thử nhanh (không tốn công tìm tin):</p>
-                <div class="sample-grid">
-                    <button type="button" class="sample-btn" data-sample="bank">
-                        <span class="sample-icon" aria-hidden="true">🏦</span>
-                        <span class="sample-copy">
-                            <span class="sample-tag sample-tag-bank">Giả ngân hàng</span>
-                            <span class="sample-desc">"Tài khoản bị khóa..."</span>
+            <div class="step-card">
+                <span class="step-badge">Bước 1</span>
+                <h3 class="step-title">Chọn cách gửi tin</h3>
+                <div class="input-mode-tabs" role="tablist" aria-label="Chọn loại nội dung">
+                    <button type="button" class="input-mode-btn active" data-mode="text" role="tab" aria-selected="true">
+                        <span class="input-mode-icon" aria-hidden="true">📝</span>
+                        <span class="input-mode-copy">
+                            <strong>Văn bản</strong>
+                            <small>Dán tin nhắn copy vào ô</small>
                         </span>
                     </button>
-                    <button type="button" class="sample-btn" data-sample="police">
-                        <span class="sample-icon" aria-hidden="true">👮</span>
-                        <span class="sample-copy">
-                            <span class="sample-tag sample-tag-police">Giả công an</span>
-                            <span class="sample-desc">"Liên quan vụ án..."</span>
+                    <button type="button" class="input-mode-btn" data-mode="image" role="tab" aria-selected="false">
+                        <span class="input-mode-icon" aria-hidden="true">📷</span>
+                        <span class="input-mode-copy">
+                            <strong>Ảnh chụp</strong>
+                            <small>Chụp màn hình tin nhắn</small>
                         </span>
                     </button>
-                    <button type="button" class="sample-btn" data-sample="prize">
-                        <span class="sample-icon" aria-hidden="true">🎁</span>
-                        <span class="sample-copy">
-                            <span class="sample-tag sample-tag-prize">Trúng thưởng</span>
-                            <span class="sample-desc">"Chúc mừng trúng quà..."</span>
+                    <button type="button" class="input-mode-btn" data-mode="voice" role="tab" aria-selected="false">
+                        <span class="input-mode-icon" aria-hidden="true">🎤</span>
+                        <span class="input-mode-copy">
+                            <strong>Ghi âm</strong>
+                            <small>Đọc to nội dung tin</small>
                         </span>
                     </button>
                 </div>
             </div>
 
-            <div id="inputPanelText" class="input-mode-panel">
-                <div class="input-panel">
-                    <label class="input-label" for="messageInput">Nội dung tin nhắn</label>
-                    <textarea
-                        id="messageInput"
-                        maxlength="5000"
-                        placeholder="Dán nội dung tin nhắn nghi ngờ vào đây..."
-                    ></textarea>
-                    <p id="charCount" class="char-count">0 / 5000 ký tự</p>
+            <div class="step-card">
+                <span class="step-badge">Bước 2</span>
+                <h3 class="step-title">Nhập nội dung cần kiểm tra</h3>
+
+                <div id="inputPanelText" class="input-mode-panel">
+                    <div class="input-panel">
+                        <label class="input-label" for="messageInput">Dán tin nhắn nghi ngờ vào đây</label>
+                        <textarea
+                            id="messageInput"
+                            maxlength="5000"
+                            placeholder="Ví dụ: tin báo tài khoản bị khóa, trúng thưởng, yêu cầu chuyển tiền..."
+                        ></textarea>
+                        <p id="charCount" class="char-count">0 / 5000 ký tự</p>
+                    </div>
                 </div>
+
+                <div id="inputPanelImage" class="input-mode-panel hidden">
+                    <div class="input-panel upload-panel">
+                        <label class="upload-dropzone" for="imageUploadInput">
+                            <input type="file" id="imageUploadInput" accept="image/jpeg,image/png,image/webp,image/gif" capture="environment" hidden>
+                            <span class="upload-icon" aria-hidden="true">📷</span>
+                            <span class="upload-title">Bấm để chọn hoặc chụp ảnh</span>
+                            <span class="upload-hint">Ảnh tin nhắn trên điện thoại (SMS, Zalo, ngân hàng...)</span>
+                        </label>
+                        <div id="imagePreview" class="image-preview hidden"></div>
+                        <button type="button" id="imageClearBtn" class="secondary-btn upload-clear-btn hidden">Chọn ảnh khác</button>
+                    </div>
+                </div>
+
+                <div id="inputPanelVoice" class="input-mode-panel hidden">
+                    <div class="input-panel voice-panel">
+                        <p class="voice-intro">Bấm nút đỏ bên dưới, đọc to nội dung tin nhắn (tối đa 1 phút).</p>
+                        <button type="button" id="voiceRecordBtn" class="voice-record-btn" aria-pressed="false">
+                            <span class="voice-record-icon" aria-hidden="true">🎤</span>
+                            <span id="voiceRecordLabel">Bấm để ghi âm</span>
+                        </button>
+                        <p id="voiceStatus" class="voice-status">Chưa ghi âm</p>
+                        <audio id="voicePlayback" class="voice-playback hidden" controls></audio>
+                        <button type="button" id="voiceClearBtn" class="secondary-btn upload-clear-btn hidden">Ghi lại từ đầu</button>
+                    </div>
+                </div>
+
+                <details class="sample-details">
+                    <summary>Thử với tin mẫu (không cần tìm tin thật)</summary>
+                    <div class="sample-buttons" role="group" aria-label="Tin mẫu thử nhanh">
+                        <div class="sample-grid">
+                            <button type="button" class="sample-btn" data-sample="bank">
+                                <span class="sample-icon" aria-hidden="true">🏦</span>
+                                <span class="sample-copy">
+                                    <span class="sample-tag sample-tag-bank">Giả ngân hàng</span>
+                                    <span class="sample-desc">"Tài khoản bị khóa..."</span>
+                                </span>
+                            </button>
+                            <button type="button" class="sample-btn" data-sample="police">
+                                <span class="sample-icon" aria-hidden="true">👮</span>
+                                <span class="sample-copy">
+                                    <span class="sample-tag sample-tag-police">Giả công an</span>
+                                    <span class="sample-desc">"Liên quan vụ án..."</span>
+                                </span>
+                            </button>
+                            <button type="button" class="sample-btn" data-sample="prize">
+                                <span class="sample-icon" aria-hidden="true">🎁</span>
+                                <span class="sample-copy">
+                                    <span class="sample-tag sample-tag-prize">Trúng thưởng</span>
+                                    <span class="sample-desc">"Chúc mừng trúng quà..."</span>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </details>
             </div>
 
-            <div id="inputPanelImage" class="input-mode-panel hidden">
-                <div class="input-panel upload-panel">
-                    <label class="upload-dropzone" for="imageUploadInput">
-                        <input type="file" id="imageUploadInput" accept="image/jpeg,image/png,image/webp,image/gif" capture="environment" hidden>
-                        <span class="upload-icon" aria-hidden="true">📷</span>
-                        <span class="upload-title">Chọn hoặc chụp ảnh tin nhắn</span>
-                        <span class="upload-hint">Ảnh chụp màn hình SMS, Zalo, Messenger... (tối đa 5 MB)</span>
-                    </label>
-                    <div id="imagePreview" class="image-preview hidden"></div>
-                    <button type="button" id="imageClearBtn" class="secondary-btn upload-clear-btn hidden">Chọn ảnh khác</button>
-                </div>
+            <div class="help-box" role="note">
+                <strong>💡 Mẹo nhỏ:</strong> Nếu không chắc, đừng bấm link và đừng chuyển tiền. Gọi con cháu hoặc ngân hàng in trên thẻ để hỏi.
             </div>
 
-            <div id="inputPanelVoice" class="input-mode-panel hidden">
-                <div class="input-panel voice-panel">
-                    <p class="voice-intro">Bấm nút bên dưới và đọc to nội dung tin nhắn nghi ngờ (tối đa 60 giây).</p>
-                    <button type="button" id="voiceRecordBtn" class="voice-record-btn" aria-pressed="false">
-                        <span class="voice-record-icon" aria-hidden="true">🎤</span>
-                        <span id="voiceRecordLabel">Nhấn để ghi âm</span>
-                    </button>
-                    <p id="voiceStatus" class="voice-status">Chưa có bản ghi</p>
-                    <audio id="voicePlayback" class="voice-playback hidden" controls></audio>
-                    <button type="button" id="voiceClearBtn" class="secondary-btn upload-clear-btn hidden">Ghi lại</button>
-                </div>
+            <div class="step-card step-card-action">
+                <span class="step-badge">Bước 3</span>
+                <h3 class="step-title">Xem kết quả phân tích</h3>
+                <button id="checkButton" type="button" class="btn-primary btn-primary-large">Kiểm tra ngay</button>
             </div>
-
-            <button id="checkButton" type="button" class="btn-primary">⚡ Kiểm tra ngay</button>
 
             <section id="resultBox" class="result-box" aria-live="polite">
-                <p class="result-placeholder">Kết quả sẽ hiển thị ở đây sau khi bấm Kiểm tra.</p>
+                <p class="result-placeholder">Kết quả sẽ hiện ở đây sau khi bác bấm <strong>Kiểm tra ngay</strong>.</p>
             </section>
         </section>
 
         <!-- Trang lịch sử -->
         <section id="viewHistory" class="view hidden">
-            <h2 class="page-title">Lịch sử kiểm tra</h2>
-            <p class="subtitle">10 tin gần nhất. Bấm để xem lại — không tốn lượt AI.</p>
+            <div class="page-hero">
+                <h2 class="page-title page-title-left">Lịch sử kiểm tra</h2>
+                <p class="page-lead">10 tin gần nhất đã lưu trên máy bác. Bấm vào tin để xem lại — không tốn lượt kiểm tra.</p>
+            </div>
             <div id="historyList" class="history-list"></div>
             <div id="historyDetail" class="history-detail hidden"></div>
         </section>
 
         <!-- Trang thư viện -->
         <section id="viewLibrary" class="view hidden">
-            <h2 class="page-title">Thư viện lừa đảo</h2>
-            <p class="subtitle">Tìm hiểu chiêu thức phổ biến để nhận ra sớm hơn.</p>
+            <div class="page-hero">
+                <h2 class="page-title page-title-left">Thư viện lừa đảo</h2>
+                <p class="page-lead">Xem các chiêu thức phổ biến để nhận ra sớm hơn, trước khi bị lừa.</p>
+            </div>
             <div class="filter-bar" role="group" aria-label="Lọc theo nhóm">
                 <button type="button" class="filter-btn active" data-filter="all">Tất cả</button>
                 <button type="button" class="filter-btn" data-filter="giả ngân hàng">Ngân hàng</button>
@@ -165,8 +214,10 @@
 
         <!-- Trang luyện tập -->
         <section id="viewQuiz" class="view hidden">
-            <h2 class="page-title">Luyện tập cảnh giác</h2>
-            <p class="subtitle">Đọc tin nhắn và chọn: tin thật hay lừa đảo?</p>
+            <div class="page-hero">
+                <h2 class="page-title page-title-left">Luyện tập cảnh giác</h2>
+                <p class="page-lead">Đọc tin mẫu và chọn: đây là tin thật hay tin lừa đảo?</p>
+            </div>
             <div class="quiz-panel">
                 <div class="quiz-meta">
                     <span id="quizProgress" class="quiz-progress">Câu 1/12</span>
@@ -174,8 +225,8 @@
                 </div>
                 <blockquote id="quizMessage" class="quiz-message">Đang tải câu hỏi...</blockquote>
                 <div id="quizChoices" class="quiz-choices" role="group" aria-label="Chọn tin thật hoặc lừa đảo">
-                    <button type="button" id="quizBtnFake" class="quiz-btn quiz-btn-fake">Lừa đảo</button>
-                    <button type="button" id="quizBtnReal" class="quiz-btn quiz-btn-real">Tin thật</button>
+                    <button type="button" id="quizBtnFake" class="quiz-btn quiz-btn-fake">Đây là lừa đảo</button>
+                    <button type="button" id="quizBtnReal" class="quiz-btn quiz-btn-real">Đây là tin thật</button>
                 </div>
                 <div id="quizFeedback" class="quiz-feedback hidden" aria-live="polite"></div>
                 <button type="button" id="quizNextBtn" class="secondary-btn quiz-next-btn hidden">Câu tiếp theo</button>
@@ -184,7 +235,8 @@
     </main>
 
     <footer class="app-footer">
-        ScamCheck là công cụ giáo dục do nhóm học viên phát triển. Kết quả không thay thế cảnh báo chính thức từ ngân hàng hoặc cơ quan chức năng.
+        <p class="footer-main">ScamCheck là công cụ hỗ trợ giáo dục, giúp phát hiện tin lừa đảo.</p>
+        <p class="footer-sub">Kết quả mang tính tham khảo — không thay thế cảnh báo chính thức từ ngân hàng hoặc cơ quan chức năng.</p>
     </footer>
 
     <nav class="bottom-nav" aria-label="Điều hướng chính">

@@ -346,7 +346,7 @@ function stopVoiceRecording() {
 function resetRecordingUi(clearBlob) {
     voiceRecordBtn?.classList.remove("recording");
     voiceRecordBtn?.setAttribute("aria-pressed", "false");
-    if (voiceRecordLabel) voiceRecordLabel.textContent = "Nhấn để ghi âm";
+    if (voiceRecordLabel) voiceRecordLabel.textContent = "Bấm để ghi âm";
     if (clearBlob) {
         audioBlob = null;
         if (voicePlayback) {
