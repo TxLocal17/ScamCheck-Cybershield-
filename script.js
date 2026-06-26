@@ -534,7 +534,8 @@ function renderFullResult(data, options = {}) {
         </div>
     `;
 
-    const crisisHtml = options.readOnly ? "" : buildCrisisQuestionHtml();
+    const needsCrisisFlow = detective.riskLevel !== "An toàn";
+    const crisisHtml = options.readOnly || !needsCrisisFlow ? "" : buildCrisisQuestionHtml();
 
     if (!options.container) {
         resultBox.className = "result-box";
