@@ -79,6 +79,8 @@ const themeToggle = document.getElementById("themeToggle");
 const landingThemeToggle = document.getElementById("landingThemeToggle");
 const quizProgress = document.getElementById("quizProgress");
 const quizScore = document.getElementById("quizScore");
+const quizAsideProgress = document.getElementById("quizAsideProgress");
+const quizAsideScore = document.getElementById("quizAsideScore");
 const quizMessage = document.getElementById("quizMessage");
 const quizBtnFake = document.getElementById("quizBtnFake");
 const quizBtnReal = document.getElementById("quizBtnReal");
@@ -99,6 +101,7 @@ const inputPanelVoice = document.getElementById("inputPanelVoice");
 const appHeader = document.querySelector(".app-header");
 const bottomNav = document.querySelector(".bottom-nav");
 const appFooter = document.querySelector(".app-footer");
+const appSidebar = document.querySelector(".app-sidebar");
 
 init();
 
@@ -111,6 +114,21 @@ function init() {
     loadStaticData();
     normalizeHomeHash();
     navigateTo(getRouteFromHash());
+    window.addEventListener("resize", handleLayoutResize);
+}
+
+function isSplitLayout() {
+    return window.matchMedia("(min-width: 1024px)").matches;
+}
+
+function getSplitPlaceholder(message) {
+    return `<div class="split-placeholder"><span class="split-placeholder-icon" aria-hidden="true">👈</span><p>${escapeHtml(message)}</p></div>`;
+}
+
+function handleLayoutResize() {
+    const route = getRouteFromHash();
+    if (route === "/history") renderHistoryList();
+    if (route === "/library") renderLibraryList();
 }
 
 function bindHeaderControls() {
@@ -196,8 +214,8 @@ function scrollToPanel(element) {
 
 function getScalableRoots() {
     return [
-        document.querySelector(".container"),
-        document.querySelector(".app-footer"),
+        document.querySelector(".app-content"),
+        document.querySelector(".app-sidebar"),
         document.querySelector(".bottom-nav")
     ];
 }
@@ -429,7 +447,7 @@ function bindRouter() {
         });
     });
 
-    document.querySelectorAll(".brand-home").forEach((link) => {
+    document.querySelectorAll(".brand-home, #sidebarBrand").forEach((link) => {
         link.addEventListener("click", (event) => {
             event.preventDefault();
             goToLanding();
@@ -479,6 +497,7 @@ function navigateTo(route) {
     viewQuiz.classList.toggle("hidden", route !== "/quiz");
 
     appHeader?.classList.toggle("hidden", isLanding);
+    appSidebar?.classList.toggle("hidden", isLanding);
     bottomNav?.classList.toggle("hidden", isLanding);
     appFooter?.classList.toggle("hidden", isLanding);
     document.body.classList.toggle("landing-active", isLanding);
@@ -525,11 +544,21 @@ function resetQuiz() {
     quizState = { index: 0, score: 0, answered: false };
 }
 
+function syncQuizAside() {
+    const total = quizData.length || 10;
+    const answered = Math.min(quizState.index, total);
+    quizAsideProgress.textContent = quizState.index >= total
+        ? `${total} / ${total} câu`
+        : `${answered} / ${total} câu`;
+    quizAsideScore.textContent = `Điểm: ${quizState.score}`;
+}
+
 function renderQuiz() {
     if (!quizData.length) {
         quizMessage.textContent = "Chưa tải được câu hỏi. Bác thử tải lại trang nhé.";
         quizProgress.textContent = "Câu 0/0";
         quizScore.textContent = "Điểm: 0";
+        syncQuizAside();
         quizChoicesHide();
         return;
     }
@@ -543,6 +572,7 @@ function renderQuiz() {
     quizMessage.textContent = question.message;
     quizProgress.textContent = `Câu ${quizState.index + 1}/${quizData.length}`;
     quizScore.textContent = `Điểm: ${quizState.score}`;
+    syncQuizAside();
     quizFeedback.classList.add("hidden");
     quizNextBtn.classList.add("hidden");
     quizState.answered = false;
@@ -593,6 +623,8 @@ function renderQuizComplete() {
     const score = quizState.score;
     quizProgress.textContent = "Hoàn thành";
     quizScore.textContent = `Điểm: ${score}/${total}`;
+    quizAsideProgress.textContent = `${total} / ${total} câu`;
+    quizAsideScore.textContent = `Điểm: ${score}/${total}`;
     quizMessage.textContent = score >= total * 0.7
         ? "Giỏi lắm bác! Bác đã nhận ra khá nhiều tin lừa đảo."
         : "Bác cứ luyện thêm vài lần nữa sẽ quen tay hơn.";
@@ -1266,10 +1298,19 @@ function getHistory() {
 
 function renderHistoryList() {
     const items = getHistory();
-    historyDetail.classList.add("hidden");
+    const layout = document.querySelector(".history-layout");
+    layout?.classList.remove("has-detail");
+    delete historyDetail.dataset.selectedId;
 
     if (!items.length) {
         historyList.innerHTML = `<p class="empty-state">📋 Chưa có tin nào.<br>Hãy kiểm tra tin đầu tiên ở tab Kiểm tra.</p>`;
+        if (isSplitLayout()) {
+            historyDetail.classList.remove("hidden");
+            historyDetail.innerHTML = getSplitPlaceholder("Chưa có tin nào trong lịch sử.");
+        } else {
+            historyDetail.classList.add("hidden");
+            historyDetail.innerHTML = "";
+        }
         return;
     }
 
@@ -1287,15 +1328,37 @@ function renderHistoryList() {
         `;
     }).join("");
 
+    if (isSplitLayout()) {
+        historyDetail.classList.remove("hidden");
+        historyDetail.innerHTML = getSplitPlaceholder("Bấm một tin bên trái để xem lại phân tích.");
+    } else {
+        historyDetail.classList.add("hidden");
+        historyDetail.innerHTML = "";
+    }
+
     historyList.querySelectorAll(".history-item").forEach((btn) => {
         btn.addEventListener("click", () => {
             const item = items.find((i) => i.id === Number(btn.dataset.id));
             if (!item) return;
-            historyDetail.classList.remove("hidden");
-            historyDetail.innerHTML = `<button type="button" class="back-detail-btn">← Quay lại danh sách</button><div id="historyResultHost" class="result-box"></div>`;
-            historyDetail.querySelector(".back-detail-btn").addEventListener("click", () => {
-                historyDetail.classList.add("hidden");
+
+            historyDetail.dataset.selectedId = String(item.id);
+            layout?.classList.add("has-detail");
+            historyList.querySelectorAll(".history-item").forEach((el) => {
+                el.classList.toggle("selected", el === btn);
             });
+
+            const backBtnHtml = isSplitLayout()
+                ? ""
+                : `<button type="button" class="back-detail-btn">← Quay lại danh sách</button>`;
+            historyDetail.classList.remove("hidden");
+            historyDetail.innerHTML = `${backBtnHtml}<div id="historyResultHost" class="result-box"></div>`;
+            historyDetail.querySelector(".back-detail-btn")?.addEventListener("click", () => {
+                historyDetail.classList.add("hidden");
+                layout?.classList.remove("has-detail");
+                delete historyDetail.dataset.selectedId;
+                historyList.querySelectorAll(".history-item").forEach((el) => el.classList.remove("selected"));
+            });
+
             const host = historyDetail.querySelector("#historyResultHost");
             renderFullResult({
                 message: item.message,
@@ -1303,18 +1366,28 @@ function renderHistoryList() {
                 psychologist: item.psychologist,
                 psychologistError: item.psychologistError
             }, { readOnly: true, container: host });
-            scrollToPanel(host);
+
+            if (isSplitLayout()) {
+                scrollToPanel(host);
+            } else {
+                scrollToPanel(historyDetail);
+            }
         });
     });
 }
 
 function renderLibraryList() {
+    const layout = document.querySelector(".library-layout");
+    layout?.classList.remove("has-detail");
+    delete libraryDetail.dataset.selectedId;
+
     if (!scamTypesData.length) {
         libraryList.innerHTML = `<p class="empty-state">Đang tải thư viện...</p>`;
+        libraryDetail.classList.add("hidden");
+        libraryDetail.innerHTML = "";
         return;
     }
 
-    libraryDetail.classList.add("hidden");
     const filtered = libraryFilter === "all"
         ? scamTypesData
         : scamTypesData.filter((t) => t.category === libraryFilter);
@@ -1329,12 +1402,31 @@ function renderLibraryList() {
     `;
     }).join("");
 
+    if (isSplitLayout()) {
+        libraryDetail.classList.remove("hidden");
+        libraryDetail.innerHTML = getSplitPlaceholder("Chọn một chiêu thức bên trái để xem chi tiết.");
+    } else {
+        libraryDetail.classList.add("hidden");
+        libraryDetail.innerHTML = "";
+    }
+
     libraryList.querySelectorAll(".library-item").forEach((btn) => {
         btn.addEventListener("click", () => {
             const item = scamTypesData.find((t) => t.id === btn.dataset.id);
             if (!item) return;
+
+            libraryDetail.dataset.selectedId = item.id;
+            layout?.classList.add("has-detail");
+            libraryList.querySelectorAll(".library-item").forEach((el) => {
+                el.classList.toggle("selected", el === btn);
+            });
+
+            const backBtnHtml = isSplitLayout()
+                ? ""
+                : `<button type="button" class="back-detail-btn">← Quay lại danh sách</button>`;
             libraryDetail.classList.remove("hidden");
             libraryDetail.innerHTML = `
+                ${backBtnHtml}
                 <span class="library-category ${getLibraryCategoryClass(item.category)}">${escapeHtml(item.category)}</span>
                 <h3 class="library-detail-title">${escapeHtml(item.name)}</h3>
                 <p>${escapeHtml(item.description)}</p>
@@ -1344,13 +1436,25 @@ function renderLibraryList() {
                 </div>
                 <button type="button" class="secondary-btn" id="tryInCheckBtn">Thử kiểm tra tin này</button>
             `;
+            libraryDetail.querySelector(".back-detail-btn")?.addEventListener("click", () => {
+                libraryDetail.classList.add("hidden");
+                layout?.classList.remove("has-detail");
+                delete libraryDetail.dataset.selectedId;
+                libraryList.querySelectorAll(".library-item").forEach((el) => el.classList.remove("selected"));
+            });
+
             const tryBtn = document.getElementById("tryInCheckBtn");
             tryBtn.addEventListener("click", () => {
                 messageInput.value = item.example;
                 updateCharCount();
                 goHome();
             });
-            scrollToPanel(tryBtn);
+
+            if (isSplitLayout()) {
+                scrollToPanel(tryBtn);
+            } else {
+                scrollToPanel(libraryDetail);
+            }
         });
     });
 }

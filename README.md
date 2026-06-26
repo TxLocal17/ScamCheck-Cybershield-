@@ -20,6 +20,8 @@ Công cụ web giúp kiểm tra nhanh tin nhắn nghi ngờ lừa đảo (SMS, Z
 | 4 | **A** Thư viện 15 kiểu lừa đảo + **D** Thẻ cảnh báo chia sẻ (Canvas + QR) + **C** Luyện tập 10 câu |
 | 5 | Người ứng cứu — 4 tình huống khủng hoảng |
 
+**Giao diện bổ sung:** trang chào tách 2 cột, sidebar điều hướng (màn rộng), kiểm tra/lịch sử/thư viện/quiz dùng không gian ngang, sáng/tối, chữ to/nhỏ, kiểm tra ảnh + ghi âm.
+
 ## Chạy trên máy (dành cho nhóm dev)
 
 1. Sao chép `config.example.js` thành `config.js`
